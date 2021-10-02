@@ -8,16 +8,16 @@ firmwareVersion: "iBoot-7429.10.23.0.2" (tag 0x4A - string of length 20dec bytes
 buildtype: "User" - (tag 0x31 - string of length 0x04 bytes)
 tz_offset: -25200 - (tag 0x2D - variable length integer - signed  - TODO)
 metric_file_type: 1 - (tag 0x68 - variable length integer - 01)
-metriclogs { - (tag 0x7A sequence - offset 77dec bytes - subsequence length of 46 (48 total minus sequence + length))
+metriclogs { (tag 0x7A sequence - offset 77dec bytes - subsequence length of 46 (48 total minus sequence + length))
   triggerTime: 1632669136179 (tag 0x20 - data 6 bytes)
-  triggerId: 520197 ( tag 0x28 - variable length int - data 3 bytes)
-  profileId: 427 (tag 0x30 - variable length int - data 3 bytes)
-  commCenterOperatorRoaming { (tag 0xFA - subsequence length 0x87 bytes)
+  triggerId: 520197 (tag 0x28 - variable length int - data 3 bytes)
+  profileId: 427 (tag 0x30 - variable length int - data 2bytes)
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length 0x0b - 11dec bytes)
     timestamp: 1632669136186 (tag 0x80 - data length 6 bytes)
     registration_status: 0 (tag 0x48 - data variable int of 0x00)
     subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
-  commCenterOperatorRoaming { (tag 0xFA - 
+  commCenterOperatorRoaming { (tag 0xFA878002)
     timestamp: 1632669136186 (tag 0x08 - data length of 6 bytes)
     registration_status: 0 (tag 0x48 - variable length int - value 0)
     subs_id: 0 (tag 0x50 - variable length int - value 0)
@@ -25,74 +25,74 @@ metriclogs { - (tag 0x7A sequence - offset 77dec bytes - subsequence length of 4
 }
 metriclogs { (tag 0x7A - total 48dec - offset 125 bytes - subsequence length 46dec bytes)
   triggerTime: 1632672719189 (tag 0x20 - variable length int - data 6 bytes)
-  triggerId: 520197 (
-  profileId: 427
-  commCenterOperatorRoaming { (tag 0xFA)
-    timestamp: 1632672719203
-    registration_status: 0
-    subs_id: 0
+  triggerId: 520197 (tag 0x28 - variable length int - data 3 bytes)
+  profileId: 427 (tag 0x30 - variable length int - data 2bytes)
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes)
+    timestamp: 1632672719203 (tag 0x80 - data length 6 bytes)
+    registration_status: 0 (tag 0x48 - variable length int - value 0)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
-  commCenterOperatorRoaming {
-    timestamp: 1632672719203
-    registration_status: 0
-    subs_id: 0
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes)
+    timestamp: 1632672719203 (tag 0x80 - data length 6 bytes)
+    registration_status: 0 (tag 0x48 - variable length int - value 0)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
 }
 metriclogs { (tag 0x7A - total 48dec - offset 173dec - subsequence Len 46dec bytes)
   triggerTime: 1632675969417 (tag 0x20 - length 6)
-  triggerId: 520197 (tag 0x28
-  profileId: 427 (tag 0x30
-  commCenterOperatorRoaming {
-    timestamp: 1632675969428
-    registration_status: 0
-    subs_id: 0
+  triggerId: 520197 (tag 0x28 - variable length int - data 3 bytes)
+  profileId: 427 (tag 0x30 - variable length int - data 2bytes)
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes)
+    timestamp: 1632675969428 (tag 0x08 - length 06)
+    registration_status: 0 (tag 0x48 - variable length int - value 0)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
-  commCenterOperatorRoaming {
-    timestamp: 1632675969428
-    registration_status: 0
-    subs_id: 0
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes)
+    timestamp: 1632675969428 (tag 0x08 - length 06)
+    registration_status: 0 (tag 0x48 - variable length int - value 0)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
 }
 metriclogs { (tag 0x7A - total 48dec - offset 221dec - subsequence length 46dec bytes)
   triggerTime: 1632679555785 (tag 0x20 - length 6)
-  triggerId: 520197
-  profileId: 427
-  commCenterOperatorRoaming {
-    timestamp: 1632679555826 (tag - length 06)
-    registration_status: 0 (tag
-    subs_id: 0 (tag 
+  triggerId: 520197 (tag 0x28 - variable length int - data 3 bytes)
+  profileId: 427 (tag 0x30 - variable length int - data 2bytes)
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes)
+    timestamp: 1632679555826 (tag 0x08 - length 06)
+    registration_status: 0 (tag 0x48 - variable length int - value 0)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
-  commCenterOperatorRoaming {
-    timestamp: 1632679555827
-    registration_status: 0
-    subs_id: 0
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes)
+    timestamp: 1632679555827 (tag 0x80 - data length 6 bytes)
+    registration_status: 0 (tag 0x48 - variable length int - value 0)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
 }
 metriclogs { (tag 0x7A - total 48dec - offset 269 bytes - subsequence length 46dec bytes)
   triggerTime: 1632683239867 (tag 0x20 - length 6)
-  triggerId: 520197
-  profileId: 427
-  commCenterOperatorRoaming {
-    timestamp: 1632683239872
-    registration_status: 0
-    subs_id: 0
+  triggerId: 520197 (tag 0x28 - variable length int - data 3 bytes)
+  profileId: 427 (tag 0x30 - variable length int - data 2bytes)
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes)
+    timestamp: 1632683239872 (tag 0x08 - length 06)
+    registration_status: 0 (tag 0x48 - variable length int - value 0)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
-  commCenterOperatorRoaming {
-    timestamp: 1632683239874
-    registration_status: 0
-    subs_id: 0
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes) 
+    timestamp: 1632683239874 (tag 0x08 - length 06)
+    registration_status: 0 (tag 0x48 - variable length int - value 0)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
 }
-metriclogs { (tag 0x7A - total 604dec - offset 317dec - encoded length = 0xD90420 - TODO subsequence length of 600dec)
+metriclogs { (tag 0x7A - total 604dec - offset 317dec - encoded length = 0xD904 - 600dec - ((0b1011000 < 7) || 0b00000100) as if (0b0010110000000100))
   triggerTime: 1632614400000 (tag 0x20 - length 6)
-  triggerId: 520196 (tag 0x28 - 
+  triggerId: 520196 (tag 0x28 - variable length int - data 3 bytes)
   profileId: 434 (tag 0x30 - data 0xB203)
   profileId: 435 (tag 0x30 - data 0xB303)
   profileId: 437 (tag 0x30 - data 0xB503)
-  nfcGeneralStatistic { (tag 0xB2
-    timestamp: 1632614400000
-    startTimestamp: 1632590364612
-    totalCEEnable: 0
+  nfcGeneralStatistic { (tag 0xB280A009 - length 0x6F - 
+    timestamp: 1632614400000 (tag 0x08 - length 0x06
+    startTimestamp: 1632590364612 (tag 0x10 - length 0x06)_
+    totalCEEnable: 0 (tag 0x018
     totalCardProvisioned: 2
     totalTransientDeactiveTimeout: 0
     totalAPNReceived: 0
@@ -124,59 +124,59 @@ metriclogs { (tag 0x7A - total 604dec - offset 317dec - encoded length = 0xD9042
     radioIsEnabled: false
     radioChangeCount: 0
   }
-  nfcVersions {
-    timestamp: 1632614400000
-    middlewareVersion: 67240206
+  nfcVersions { (tag 0xBA80A009 - subsequence length 0x60 - 96bytes)
+    timestamp: 1632614400000 (tag 0x08 - length 0x06 bytes)
+    middlewareVersion: 67240206 (tag 0x10 - variable length int - 4 bytes)
     platformVersion: "N5B2M002C3A50000" (tag 0x1A - length 0x10 / 16dec)
-    nfccHWVersion: 178
-    nfccROMVersion: 2
-    nfccFWVersion: 353
-    nfccFWRevision: 110454
-    seDeviceType: 210
-    seHWVersion: 7
-    seFWVersion: 1792
-    seSignKeyType: 2
-    seSequenceCounter: 2584
-    seReferenceCounter: 2584
-    seOSMode: 2
-    seRestrictedMode: 0
-    seMigrationState: 1
-    seMigrationPkgs: 0
-    seMigrationInst: 0
-    hardwareType: 8
-    seTransientDeselect: 17648
-    seTransientReset: 12568
-    seTransientPersistent: 528440
-    seAvailableIndices: 1360
-    seTotalIndices: 4500
+    nfccHWVersion: 178 (tag 0x20 - variable length int - 2 bytes)
+    nfccROMVersion: 2 (tag 0x28 - variable length int - 1 byte)
+    nfccFWVersion: 353 (tag 0x30 - variable length int 2 bytes)
+    nfccFWRevision: 110454 (tag 0x38 - variable length int - 3 bytes)
+    seDeviceType: 210 (tag 0x040 - variable length int - 2 bytes)
+    seHWVersion: 7 (tag 0x48 - variable length int 1 byte)
+    seFWVersion: 1792 (tag 0x50 - variable length int - 2 bytes)
+    seSignKeyType: 2 (tag 0x58 - variable length int - 1 byte)
+    seSequenceCounter: 2584 (tag 0x60 - variable length int - 2 bytes)
+    seReferenceCounter: 2584 (tag 0x68 - variable length int - 2 bytes)
+    seOSMode: 2 (tag 0x70 - variable length int - 1 byte)
+    seRestrictedMode: 0 (tag 0x78 - variable length int - 1 byte)
+    seMigrationState: 1 (tag 0x8001 - variable length int - 1 byte)
+    seMigrationPkgs: 0 (tag 0x8801 - variable length int - 1 byte)
+    seMigrationInst: 0 (tag 0x8001 - variable length int - 1 byte)
+    hardwareType: 8 (tag 0xC801 - variable length int - 1 byte)
+    seTransientDeselect: 17648 ( (tag 0xD001 - variable length int - 3 bytes)
+    seTransientReset: 12568  (tag 0xD801 - variable length int - 2 bytes)
+    seTransientPersistent: 528440 (tag 0xE001 - variable length int - 3 bytes)
+    seAvailableIndices: 1360 (tag 0xE801 - variable length int - 3 bytes)
+    seTotalIndices: 4500 (tag 0xAF01 - variable length int - 2 bytes)
   }
-  nfcExpressTransactionStatistic {
-    timestamp: 1632614400000
-    expressModeConfiguration: 0
+  nfcExpressTransactionStatistic { ( (tag 0xC283A009 - subsequence length 0x09)
+    timestamp: 1632614400000 (tag 0x08 - length 06 bytes)
+    expressModeConfiguration: 0 (tag 0x18 - variable length int - 0x00)
   }
-  nfc_DeviceExceptionStatistic {
-    timestamp: 1632614400000
-    timestamp: 1632614400000
-    uuidReference: [16 bytes] 48 e9 c4 c3 d2 5d 46 07 a9 12 c3 ce a7 48 df 2b
-    mwCount: 0
-    hwCount: 0
-    restrictedModeCount: 0
-    seRemovedEvt0Count: 0
-    seRemovedEvt1Count: 0
-    seRemovedEvt2Count: 0
-    seRemovedEvt3Count: 0
-    seRemovedEvt4Count: 0
-    seRemovedEvt5Count: 0
-    pllUnlock: 0
-    pllUnlockDuringPMICPowerCycle: 0
-    readerModeConnectErrorCount: 0
-    readerModeDisconnectErrorCount: 0
-    readerModeTransceiveErrorCount: 0
-    loadStackFirmwareRestoreRetryCount: 0
-    failForwardRestoreAttemptFailureCount: 0
-    failForwardState: 0
+  nfc_DeviceExceptionStatistic { (tag 0xDA81A009 - subsequence length - 0x48 / 72dec)
+    timestamp: 1632614400000 (tag 0x08 - data 6 bytes)
+    timestamp: 1632614400000 (tag 0x08 - data 6 bytes)
+    uuidReference: [16 bytes] 48 e9 c4 c3 d2 5d 46 07 a9 12 c3 ce a7 48 df  (tag 0x10 - UUID 16 bytes)
+    mwCount: 0 (tag 0x18 - variable length int - 0 - 1 byte)
+    hwCount: 0 (tag 0x20 - variable length int - 0 - 1 byte)
+    restrictedModeCount: 0 (tag 0x28 - variable length int - 0 - 1 byte)
+    seRemovedEvt0Count: 0 (tag 0x30 - variable length int - 0 - 1 byte)
+    seRemovedEvt1Count: 0 (tag 0x38 - variable length int - 0 - 1 byte)
+    seRemovedEvt2Count: 0 (tag 0x40 - variable length int - 0 - 1 byte)
+    seRemovedEvt3Count: 0 (tag 0x48 - variable length int - 0 - 1 byte)
+    seRemovedEvt4Count: 0 (tag 0x50 - variable length int - 0 - 1 byte)
+    seRemovedEvt5Count: 0 (tag 0x58 - variable length int - 0 - 1 byte)
+    pllUnlock: 0 (tag 0x60 - variable length int - 0 - 1 byte)
+    pllUnlockDuringPMICPowerCycle: 0 (tag 0x68 - variable length int - 0 - 1 byte)
+    readerModeConnectErrorCount: 0 (tag 0x8001 - variable length int - 0 - 1 byte)
+    readerModeDisconnectErrorCount: 0 tag 0x8801 - variable length int - 0 - 1 byte)
+    readerModeTransceiveErrorCount: 0 (tag 0x9001 - variable length int - 0 - 1 byte)
+    loadStackFirmwareRestoreRetryCount: 0 (tag 0x9801 - variable length int - 0 - 1 byte)
+    failForwardRestoreAttemptFailureCount: 0 (tag 0xA0001 - variable length int - 0 - 1 byte)
+    failForwardState: 0 (tag 0xA801 - variable length int - 0 - 1 byte)
   }
-  homeKitConfigurationData {
+  homeKitConfigurationData { (tag 0xB2808009 - offset 632bytes - subsequence length - 243bytes)
     timestamp: 1632614400000
     databaseSize: 211612
     metadataVersion: 880
@@ -277,17 +277,17 @@ metriclogs { (tag 0x7A - total 604dec - offset 317dec - encoded length = 0xD9042
 }
 metriclogs { (tag 0x7A - total 145dec bytes - offset 921dec
   triggerTime: 1632614400000 (tag 0x20
-  triggerId: 2359308 (tag 0x28
+  triggerId: 2359308 (tag 0x28 - variable length int - 4 bytes)
   profileId: 246 (tag 0x30
   homeKitMessageTransported { (offset 943dec)
-    timestamp: 1632692512042
-    identifier: "8EFD9E3E-6189-4387-8077-E7EBD00B3ADB"
-    transactionID: "8BB3C986-8F89-4E7A-83BF-3B8C22036DC7"
-    isSecure: true
-    messageType: HomeKitMessageType_Request
-    transport: HomeKitMessageTransportType_IDSProxy
-    direction: HomeKitMessageDirection_Receive
-    messageName: "kHomeConfigInternalRequestKey"
+    timestamp: 1632692512042 (tag 0x08 - 6 bytes)
+    identifier: "8EFD9E3E-6189-4387-8077-E7EBD00B3ADB" (tag 0x1A - string length 0x24 36dec)
+    transactionID: "8BB3C986-8F89-4E7A-83BF-3B8C22036DC7" (tag 0x22 - string length 0x24 36dec)
+    isSecure: true (tag 0x28 - bool true - 1 byte)
+    messageType: HomeKitMessageType_Request (tag 0x30 - value 0x01)
+    transport: HomeKitMessageTransportType_IDSProxy (tag 0x38 - value 0x04
+    direction: HomeKitMessageDirection_Receive (tag 0x40 - value 0x01
+    messageName: "kHomeConfigInternalRequestKey" (tag 0x4A - string length 0x1d 29dec)
   }
 } 
 metriclogs { (tag 0x7A - offset 1066dec 
