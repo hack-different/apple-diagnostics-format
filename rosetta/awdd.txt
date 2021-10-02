@@ -1,0 +1,422 @@
+timestamp: 1632669397913 - tag 0x08 - variable length int (6 bytes)
+isAnonymous: true - (tag 0x20 - boolean value 0x01)
+deviceConfigId: 6860 - tag 0x28 - variable length int - 2 bytes)
+investigationId: 0 (tag 0x030 variable length int - 0)
+model: "Watch6,4" (tag 0x3A - model,  string of length 0x08)
+softwareBuild: "19R346" - (tag 0x42 - string of length 0x06)
+firmwareVersion: "iBoot-7429.10.23.0.2" (tag 0x4A - string of length 20dec bytes)
+buildtype: "User" - (tag 0x31 - string of length 0x04 bytes)
+tz_offset: -25200 - (tag 0x2D - variable length integer - signed  - TODO)
+metric_file_type: 1 - (tag 0x68 - variable length integer - 01)
+metriclogs { - (tag 0x7A sequence - offset 77dec bytes - subsequence length of 46 (48 total minus sequence + length))
+  triggerTime: 1632669136179 (tag 0x20 - data 6 bytes)
+  triggerId: 520197 ( tag 0x28 - variable length int - data 3 bytes)
+  profileId: 427 (tag 0x30 - variable length int - data 3 bytes)
+  commCenterOperatorRoaming { (tag 0xFA - subsequence length 0x87 bytes)
+    timestamp: 1632669136186 (tag 0x80 - data length 6 bytes)
+    registration_status: 0 (tag 0x48 - data variable int of 0x00)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
+  }
+  commCenterOperatorRoaming { (tag 0xFA - 
+    timestamp: 1632669136186 (tag 0x08 - data length of 6 bytes)
+    registration_status: 0 (tag 0x48 - variable length int - value 0)
+    subs_id: 0 (tag 0x50 - variable length int - value 0)
+  }
+}
+metriclogs { (tag 0x7A - total 48dec - offset 125 bytes - subsequence length 46dec bytes)
+  triggerTime: 1632672719189 (tag 0x20 - variable length int - data 6 bytes)
+  triggerId: 520197 (
+  profileId: 427
+  commCenterOperatorRoaming { (tag 0xFA)
+    timestamp: 1632672719203
+    registration_status: 0
+    subs_id: 0
+  }
+  commCenterOperatorRoaming {
+    timestamp: 1632672719203
+    registration_status: 0
+    subs_id: 0
+  }
+}
+metriclogs { (tag 0x7A - total 48dec - offset 173dec - subsequence Len 46dec bytes)
+  triggerTime: 1632675969417 (tag 0x20 - length 6)
+  triggerId: 520197 (tag 0x28
+  profileId: 427 (tag 0x30
+  commCenterOperatorRoaming {
+    timestamp: 1632675969428
+    registration_status: 0
+    subs_id: 0
+  }
+  commCenterOperatorRoaming {
+    timestamp: 1632675969428
+    registration_status: 0
+    subs_id: 0
+  }
+}
+metriclogs { (tag 0x7A - total 48dec - offset 221dec - subsequence length 46dec bytes)
+  triggerTime: 1632679555785 (tag 0x20 - length 6)
+  triggerId: 520197
+  profileId: 427
+  commCenterOperatorRoaming {
+    timestamp: 1632679555826 (tag - length 06)
+    registration_status: 0 (tag
+    subs_id: 0 (tag 
+  }
+  commCenterOperatorRoaming {
+    timestamp: 1632679555827
+    registration_status: 0
+    subs_id: 0
+  }
+}
+metriclogs { (tag 0x7A - total 48dec - offset 269 bytes - subsequence length 46dec bytes)
+  triggerTime: 1632683239867 (tag 0x20 - length 6)
+  triggerId: 520197
+  profileId: 427
+  commCenterOperatorRoaming {
+    timestamp: 1632683239872
+    registration_status: 0
+    subs_id: 0
+  }
+  commCenterOperatorRoaming {
+    timestamp: 1632683239874
+    registration_status: 0
+    subs_id: 0
+  }
+}
+metriclogs { (tag 0x7A - total 604dec - offset 317dec - encoded length = 0xD90420 - TODO subsequence length of 600dec)
+  triggerTime: 1632614400000 (tag 0x20 - length 6)
+  triggerId: 520196 (tag 0x28 - 
+  profileId: 434 (tag 0x30 - data 0xB203)
+  profileId: 435 (tag 0x30 - data 0xB303)
+  profileId: 437 (tag 0x30 - data 0xB503)
+  nfcGeneralStatistic { (tag 0xB2
+    timestamp: 1632614400000
+    startTimestamp: 1632590364612
+    totalCEEnable: 0
+    totalCardProvisioned: 2
+    totalTransientDeactiveTimeout: 0
+    totalAPNReceived: 0
+    totalRestrictModeEntered: 0
+    totalTransactionEndEvent: 0
+    totalFailureWithTransactionEndEventErrors: 0
+    totalAuthECommerce: 0
+    totalVASActivation: 0
+    totalSuccessfulVAS: 0
+    totalVASSignup: 0
+    totalVASTransactionException: 0
+    totalExpressFelicaTransaction: 0
+    totalFelicaEMoneyTransaction: 0
+    totalFelicaTransitTransaction: 0
+    totalSuccessfulCardIngestion: 0
+    totalSuccessfulCardIngestionWithSessionToken: 0
+    totalPlasticCardModeEnable: 0
+    totalAccessTransaction: 0
+    hasAttackLogs: false
+    totalPeerPaymentRequest: 0
+    totalPeerPaymentRequestFailure: 0
+    totalGenericAExpressTransaction: 0
+    totalDynamicRFParametersUpdate: 0
+    totalPTKeys: 0
+    totalPTDatabaseCorruption: 0
+    totalPTKeyDeletionFailed: 0
+    totalBurnoutTimerCounter: 0
+    totalMWExceptions: 0
+    radioIsEnabled: false
+    radioChangeCount: 0
+  }
+  nfcVersions {
+    timestamp: 1632614400000
+    middlewareVersion: 67240206
+    platformVersion: "N5B2M002C3A50000" (tag 0x1A - length 0x10 / 16dec)
+    nfccHWVersion: 178
+    nfccROMVersion: 2
+    nfccFWVersion: 353
+    nfccFWRevision: 110454
+    seDeviceType: 210
+    seHWVersion: 7
+    seFWVersion: 1792
+    seSignKeyType: 2
+    seSequenceCounter: 2584
+    seReferenceCounter: 2584
+    seOSMode: 2
+    seRestrictedMode: 0
+    seMigrationState: 1
+    seMigrationPkgs: 0
+    seMigrationInst: 0
+    hardwareType: 8
+    seTransientDeselect: 17648
+    seTransientReset: 12568
+    seTransientPersistent: 528440
+    seAvailableIndices: 1360
+    seTotalIndices: 4500
+  }
+  nfcExpressTransactionStatistic {
+    timestamp: 1632614400000
+    expressModeConfiguration: 0
+  }
+  nfc_DeviceExceptionStatistic {
+    timestamp: 1632614400000
+    timestamp: 1632614400000
+    uuidReference: [16 bytes] 48 e9 c4 c3 d2 5d 46 07 a9 12 c3 ce a7 48 df 2b
+    mwCount: 0
+    hwCount: 0
+    restrictedModeCount: 0
+    seRemovedEvt0Count: 0
+    seRemovedEvt1Count: 0
+    seRemovedEvt2Count: 0
+    seRemovedEvt3Count: 0
+    seRemovedEvt4Count: 0
+    seRemovedEvt5Count: 0
+    pllUnlock: 0
+    pllUnlockDuringPMICPowerCycle: 0
+    readerModeConnectErrorCount: 0
+    readerModeDisconnectErrorCount: 0
+    readerModeTransceiveErrorCount: 0
+    loadStackFirmwareRestoreRetryCount: 0
+    failForwardRestoreAttemptFailureCount: 0
+    failForwardState: 0
+  }
+  homeKitConfigurationData {
+    timestamp: 1632614400000
+    databaseSize: 211612
+    metadataVersion: 880
+    isResidentCapable: true
+    isResidentEnabled: false
+    homeConfigurations {
+      numAccessories: 2
+      numServices: 0
+      numUsers: 1
+      numAdmins: 1
+      numScenes: 4
+      numTriggers: 0
+      numEventTriggers: 0
+      numTimerTriggers: 0
+      numAccessoryServiceGroups: 0
+      numRooms: 2
+      numZones: 0
+      isResidentAvailable: true
+      isPrimaryResident: false
+      numBridgedAccessories: 0
+      numNotCertifiedAccessories: 0
+      numCertifiedAccessories: 0
+      numHAPAccessories: 0
+      numAppleMediaAccessories: 2
+      numWholeHouseAudioAccessories: 0
+      numAppleAudioAccessories: 2
+      numAppleTVAccessories: 0
+      numCameraAccessories: 0
+      numMediaSystems: 1
+      numTargetControllers: 0
+      numCertifiedTargetControllers: 0
+      numBridgedTargetControllers: 0
+      numCertifiedBridgedTargetControllers: 0
+      numConfiguredScenes: 0
+      isOwner: false
+      numResidentsEnabled: 4
+      primaryReportingDevice: false
+      numTelevisionAccessories: 0
+      networkProtectionStatus: AWDHomeKitNetworkProtectionStatus_NoManagedRouter
+      numAccessoriesWiFiPPSKCredential: 0
+      numAccessoriesNetworkProtectionAutoFullAccess: 0
+      numAccessoriesNetworkProtectionAutoProtectedMainLAN: 0
+      numAccessoriesNetworkProtectionAutoProtectedHomeKitLAN: 0
+      numAccessoriesNetworkProtectionFullAccess: 0
+      numAccessoriesNetworkProtectionHomeKitOnly: 0
+      numAccessoriesNetworkProtectionUnprotected: 0
+      numShortcuts: 0
+      numHAPIPAccessories: 0
+      numHAPBTAccessories: 0
+      numHAPBatteryServiceAccessories: 0
+      numCameraAccessoriesSupportRecording: 0
+      numHAPSpeakerServiceAccessories: 0
+      numPrimaryHAPSpeakerServiceAccessories: 0
+      numTriggerOwnedConfiguredScenes: 0
+      numCameraAccessoriesRecordingEnabled: 0
+      numCameraAccessoriesReachabilityNotificationEnabled: 0
+      numCameraAccessoriesWithActivityZonesEnabled: 0
+      enabledResidentsDeviceCapabilities: 12516351
+      numLightProfilesWithNaturalLightingSupported: 0
+      numLightProfilesWithNaturalLightingEnabled: 0
+      numLightProfilesWithNaturalLightingUsed: 0
+      numNoeAccessories: 0
+      numNoeFullCap: 0
+      numNoeSleepCap: 0
+      numNoeMinCap: 0
+      numNoeRoutCap: 0
+      numNoeBRCap: 0
+      numHAPBLEAccessoriesSupportJet: 0
+      numHAPIPAccessoriesSupportJet: 0
+      numHAPNoeAccessoriesSupportJet: 0
+      homeCreationCohortWeek: 5
+      firstHAPAccessoryAddedCohortWeek: -1
+      currentMediaAccessoryFallbackMediaUserType: 0
+      numPoeCount: 0
+      numPoe2Count: 0
+      numMoe1Accessories: 0
+      numMoe2Accessories: 0
+      numHomePods: 2
+      numWoLAccessories: 0
+      numAppleTV4K2ndGenAccessories: 0
+    }
+    isDemoConfiguration: false
+  }
+  wifiRetStats {
+    timestamp: 1632614400000
+    ret_duration: 0
+    rx_duration: 0
+  }
+  wiFiLprxStats {
+    timestamp: 1632614400000
+    phySearchDuration: 0
+    phySearchCount: 0
+    phyActiveDuration: 0
+    phyActiveCount: 0
+    lprx_enter_cnt: 0
+    lprx_exit_cnt: 0
+  }
+}
+metriclogs { (tag 0x7A - total 145dec bytes - offset 921dec
+  triggerTime: 1632614400000 (tag 0x20
+  triggerId: 2359308 (tag 0x28
+  profileId: 246 (tag 0x30
+  homeKitMessageTransported { (offset 943dec)
+    timestamp: 1632692512042
+    identifier: "8EFD9E3E-6189-4387-8077-E7EBD00B3ADB"
+    transactionID: "8BB3C986-8F89-4E7A-83BF-3B8C22036DC7"
+    isSecure: true
+    messageType: HomeKitMessageType_Request
+    transport: HomeKitMessageTransportType_IDSProxy
+    direction: HomeKitMessageDirection_Receive
+    messageName: "kHomeConfigInternalRequestKey"
+  }
+} 
+metriclogs { (tag 0x7A - offset 1066dec 
+  triggerTime: 1632614400000
+  triggerId: 2359308
+  profileId: 246
+  homeKitMessageTransported {
+    timestamp: 1632692523092
+    identifier: "7EF496DB-F4CC-4928-A8E9-6667C9812A89"
+    transactionID: "13F8ED75-11CF-42DA-8F31-45B30D2DB8AA"
+    isSecure: true
+    messageType: HomeKitMessageType_Request
+    transport: HomeKitMessageTransportType_IDSProxy
+    direction: HomeKitMessageDirection_Receive
+    messageName: "HMDHomeManagerSyncWalletKeysPassSerialNumbersMessage"
+  }
+}
+metriclogs { (tag 0x7A - total 169dec bytes - offset 1235dec)
+  triggerTime: 1632614400000
+  triggerId: 2555922
+  profileId: 292
+  idsSessionConnected {
+    timestamp: 1632614400000
+    guid: "92EEF725-BD9F-4F49-BFA7-FAEA619DB431"
+  }
+}
+metriclogs { (tag 0x7A - total 67dec bytes - offset 1302dec)
+  triggerTime: 1632614400000
+  triggerId: 2555920
+  profileId: 289
+  idsSessionAcceptSent {
+    timestamp: 1632614400000
+    guid: "92EEF725-BD9F-4F49-BFA7-FAEA619DB431"
+  }
+}
+metriclogs { (tag 0x7A - total 128dec bytes - offset 1369dec)
+  triggerTime: 1632614400000
+  triggerId: 2555926
+  profileId: 291
+  idsSessionCompleted {
+    timestamp: 1632614400000
+    guid: "92EEF725-BD9F-4F49-BFA7-FAEA619DB431"
+    sessionProtocolVersionNumber: 5
+    serviceName: "NetworkRelay"
+    clientType: 0
+    isQREnabled: 1
+    isUsingQRDirectly: 1
+    isInitiator: 0
+    isLegacySessionType: 0
+    isWithDefaultPairedDevice: 1
+    transportType: 0
+    linkProtocol: 2
+    endedReason: 0
+    durationOfSession: 20000
+    durationToConnect: 2
+    isNetworkEnabled: 1
+    isNetworkActive: 1
+    isNetworkReachable: 1
+    isWifiInterfaceDisallowed: 0
+    isCellularInterfaceDisallowed: 0
+    linkType: 3
+    destinationType: 0
+  }
+}
+metriclogs { (tag 0x7A - total 128dec bytes - offset 1497dec)
+  triggerTime: 1632614400000 (tag 0x20
+  triggerId: 2555926 (tag 0x28
+  profileId: 291 (tag 0x30
+  idsSessionCompleted {
+    timestamp: 1632614400000
+    guid: "92EEF725-BD9F-4F49-BFA7-FAEA619DB431"
+    sessionProtocolVersionNumber: 5
+    serviceName: "NetworkRelay"
+    clientType: 0
+    isQREnabled: 1
+    isUsingQRDirectly: 1
+    isInitiator: 0
+    isLegacySessionType: 0
+    isWithDefaultPairedDevice: 1
+    transportType: 0
+    linkProtocol: 2
+    endedReason: 11
+    durationOfSession: 20000
+    durationToConnect: 2
+    isNetworkEnabled: 1
+    isNetworkActive: 1
+    isNetworkReachable: 1
+    isWifiInterfaceDisallowed: 0
+    isCellularInterfaceDisallowed: 0
+    linkType: 3
+    destinationType: 0
+  }
+}
+metriclogs { (tag 0x7A - total 111dec bytes - offset 1625dec)
+  triggerTime: 1632700800000 (tag 0x20
+  triggerId: 2359308 (tag 0x28
+  profileId: 246 (tag 0x30
+  homeKitMessageTransported {
+    timestamp: 1632706178195
+    identifier: "52FED96B-FA9D-4FF1-B8D7-42256C159657"
+    isSecure: true
+    messageType: HomeKitMessageType_Oneway
+    transport: HomeKitMessageTransportType_IDSProxy
+    direction: HomeKitMessageDirection_Receive
+    messageName: "kCurrentHomeChangedNotificationKey"
+  }
+}
+metriclogs { (tag 0x7A - total 74dec bytes - offset 1736dec)
+  triggerTime: 1632690000000 (tag 0x20 - variable length int - data 6 bytes)
+  triggerId: 2588688 (tag 0x28 - 
+  profileId: 287 (tag 0x30 - variable length int - 0x9F02)
+  idsServerStorageStateMachineCompleted {
+    timestamp: 1632690000000 (tag 0x08 - length 0x06 bytes)
+    wasPrimary: true (tag 0x10 - bool - true)
+    serviceIdentifier: "com.apple.private.alloy.quickrelay" (tag 0x1A - string length 34dec bytes)
+    timeTaken: 193 (tag 0x20 - variable length integer - data 0xC101 - value 0xC1)
+    totalMessages: 0 (tag 0x28 - variable length int - value 0)
+    linkType: 0 (tag 0x30 - variable length int - value 0)
+  }
+}
+metriclogs { (tag 0x7A - offset 1810dec)
+  triggerTime: 1632704400000 (tag 0x20 - data 6dec bytes
+  triggerId: 2588688 (tag 0x28 - variable length int - 4dec bytes data)
+  profileId: 287 (tag 0x30 - 2bytes data)
+  idsServerStorageStateMachineCompleted { (tag 0x8281F009 - length 0x36 - 54dec bytes) 
+    timestamp: 1632704400000 (tag 0x08 - data length 06dec)
+    wasPrimary: true (tag 0x10 - data 0x01 true)
+    serviceIdentifier: "com.apple.private.alloy.bulletinboard" (tag 0x1A - string length 37dec)
+    timeTaken: 0 (tag 0x20 - data 0x00)
+    totalMessages: 0 (tag 0x28 - data 0x00)
+    linkType: 0 (tag 0x30 - data 0x00)
+  }
