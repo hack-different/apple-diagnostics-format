@@ -1,0 +1,18 @@
+[build-system]
+requires=["setuptools", "wheel", "poetry"]
+
+[tool.poetry]
+name="awdd_decode"
+authors=["Rick Mark <rickmark@outlook.com>"]
+version="0.0.1"
+description="Utility to parse Apple Wireless Diagnostics reports"
+license="MIT"
+readme="README.md"
+repository="https://github.com/rickmark/awdd_decode"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+pyasn1 = "^1.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^1"
