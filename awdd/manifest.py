@@ -5,7 +5,7 @@ from pathlib import *
 import struct
 from typing import *
 from awdd import *
-from enum import Enum
+from enum import IntEnum, IntFlag
 
 
 class ManifestError(Exception):
@@ -18,26 +18,36 @@ class ManifestFooter:
         self.size = size
 
 
-class IntegerFormat(Enum):
+class PropertyFlags(IntFlag):
+    NONE = 0x00
+    REPEATED = 0x01
+
+
+class IntegerFormat(IntEnum):
     TIMESTAMP = 0x01
 
 
-class StringFormat(Enum):
+class StringFormat(IntEnum):
     UNKNOWN = 0x00
 
 
-class PropertyType(Enum):
+class PropertyType(IntEnum):
+    UNKNOWN = 0x00
     DOUBLE = 0x01
     FLOAT = 0x02
     INTEGER_64 = 0x03
     INTEGER = 0x04
+    UNKNOWN_5 = 0x05
     INTEGER_32 = 0x06
     INTEGER_UNSIGNED = 0x07
+    UNKNOWN_8 = 0x08
     BOOLEAN = 0x0C
     ENUM = 0x0B
-    STRING_UNICODE = 0x0D
-    STRING_ASCII = 0x0E
+    STRING = 0x0D
+    BYTES = 0x0E
     PACKED_UINT_32 = 0x15
+    UNKNOWN_17 = 0x11
+    UNKNOWN_20 = 0x14
     OBJECT = 0x1B
 
 
@@ -45,7 +55,7 @@ class ManifestProperty:
     index: int
     name: Union[str, None]
     type: PropertyType
-    flags: int
+    flags: PropertyFlags
     version: int
     integer_format: Union[None, IntegerFormat]
     string_format: Union[None, StringFormat]
@@ -67,12 +77,10 @@ class ManifestProperty:
     TAG_EXTENSION = 0x50
     TAG_EXTENSION_TARGET = 0x60
 
-    SCALAR_INT_TAGS = [ TAG_INDEX, TAG_TYPE, TAG_ENUM_INDEX, TAG_EXTENSION_TARGET, TAG_FLAGS, TAG_STRING_FORMAT, TAG_INTEGER_FORMAT, TAG_OBJECT_REFERENCE, TAG_LIST_ITEM_TYPE ]
+    SCALAR_INT_TAGS = [ TAG_INDEX, TAG_ENUM_INDEX, TAG_EXTENSION_TARGET, TAG_STRING_FORMAT, TAG_INTEGER_FORMAT, TAG_OBJECT_REFERENCE, TAG_LIST_ITEM_TYPE ]
     PROPERTY_MAP = {
         TAG_INDEX: 'index',
-        TAG_TYPE: 'type',
         TAG_NAME: 'name',
-        TAG_FLAGS: 'flags',
         TAG_STRING_FORMAT: 'string_format',
         TAG_INTEGER_FORMAT: 'integer_format',
         TAG_OBJECT_REFERENCE: 'object_reference',
@@ -82,12 +90,16 @@ class ManifestProperty:
     }
 
     def __str__(self):
-        return f"<PropertyDefinition parent:{self.parent.name} name:{self.name} type:{self.type} index:{hex(self.index)} flags:{hex(self.flags)}>"
+        name = "anonymous" if self.name is None else self.name
+        return f"<PropertyDefinition {name} type:{self.type} index:{hex(self.index)} flags:{self.flags}>"
 
     def __init__(self, parent):
+        self.type = PropertyType.UNKNOWN
         self.name = None
         self.parent = parent
         self.extension = False
+        self.index = 0x00
+        self.flags = PropertyFlags.NONE
 
     def parse(self, content: bytes):
         reader = io.BytesIO(content)
@@ -96,8 +108,15 @@ class ManifestProperty:
 
             if tag in ManifestProperty.SCALAR_INT_TAGS:
                 value, _ = decode_variable_length_int(reader)
-
                 self.__setattr__(ManifestProperty.PROPERTY_MAP[tag], value)
+
+            elif tag == ManifestProperty.TAG_TYPE:
+                value, _ = decode_variable_length_int(reader)
+                self.type = PropertyType(value)
+
+            elif tag == ManifestProperty.TAG_FLAGS:
+                value, _ = decode_variable_length_int(reader)
+                self.value = PropertyFlags(value)
 
             elif tag == ManifestProperty.TAG_NAME:
                 length, _ = decode_variable_length_int(reader)
@@ -112,6 +131,8 @@ class ManifestProperty:
                 # either a primitive int, or is a length to a complex type
                 value, _ = decode_variable_length_int(reader)
                 print(f"Unknown tag in property definition for {self.parent.name} ({hex(tag)}, value: {value})")
+
+        self.flags = PropertyFlags(self.flags)
 
         try:
             self.type = PropertyType(self.type)
@@ -298,6 +319,9 @@ class ManifestTable:
         self.checksum = checksum
         self.rows = []
 
+    def __str__(self):
+        return f"<ManifestTable tag:{hex(self.tag)} definitions:{len(self.rows)}>"
+
     def parse(self, reader: BinaryIO):
         reader.seek(self.offset, io.SEEK_SET)
 
@@ -347,8 +371,14 @@ class Manifest:
     TAG_DISPLAY_TABLE = 0x03
     TAG_FOOTER = 0x04
 
-    tables: Dict[int, ManifestTable]
+    # Order of tag, table_id
+    compact_tables: Dict[int, ManifestTable]
+    display_tables: Dict[int, ManifestTable]
+    footers: Dict[int, ManifestFooter]
     file: BinaryIO
+
+    def __str__(self):
+        return f"<Manifest path:{self.path} tag_count:{len(self.tags)}>"
 
     def __init__(self, path: str):
         self.path = Path(path)
@@ -368,31 +398,68 @@ class Manifest:
         sections, *_ = struct.unpack(Manifest.HEADER_SECTION_COUNT,
                                      self.file.read(struct.calcsize(Manifest.HEADER_SECTION_COUNT)))
 
-        self.tables: Dict[int, ManifestTable] = {}
+        self.compact_tables = {}
+        self.display_tables = {}
+        self.footers = {}
 
-        for _ in range(sections):
-            header_id, count = struct.unpack(Manifest.HEADER_SECTION_AND_COUNT,
+        def parse_table() -> Union[None, Tuple[int, int, ManifestTable], Tuple[int, ManifestFooter]]:
+            header_tag, field_count = struct.unpack(Manifest.HEADER_SECTION_AND_COUNT,
                                              self.file.read(struct.calcsize(Manifest.HEADER_SECTION_AND_COUNT)))
 
-            if header_id in [ Manifest.TAG_COMPACT_TABLE, Manifest.TAG_DISPLAY_TABLE]:
-                assert(count == 0x04)
+            if header_tag == Manifest.TAG_COMPACT_TABLE or header_tag == Manifest.TAG_DISPLAY_TABLE:
                 tag, offset, size, checksum = \
                     struct.unpack(Manifest.HEADER_TABLE_STRUCT,
                                   self.file.read(struct.calcsize(Manifest.HEADER_TABLE_STRUCT)))
 
-                self.tables[header_id] = ManifestTable(tag, offset, size, checksum)
-            elif header_id == Manifest.TAG_FOOTER:
-                assert(count == 0x02)
+                table = ManifestTable(tag, offset, size, checksum)
+
+                if header_tag == Manifest.TAG_COMPACT_TABLE:
+                    self.compact_tables[tag] = table
+
+                elif header_tag == Manifest.TAG_DISPLAY_TABLE:
+                    self.display_tables[tag] = table
+
+                else:
+                    assert 'impossible'
+
+                return tag, header_tag, table
+
+            elif field_count == 0x02:
                 offset, size = struct.unpack(Manifest.HEADER_FOOTER_STRUCT,
                                              self.file.read(struct.calcsize(Manifest.HEADER_FOOTER_STRUCT)))
 
-                self.footer = ManifestFooter(offset, size)
+                footer = ManifestFooter(offset, size)
+                self.footers[header_tag] = footer
+
+                return header_tag, footer
+
+            elif header_tag == 0 and field_count == 0:
+                return None
+
             else:
-                raise ManifestError(f"Unsupported header tag of {header_id}")
+                raise ManifestError(f"Unsupported header tag at {header_tag} count {field_count}")
+
+        if sections == 0:
+            while parse_table() is not None:
+                pass
+
+        else:
+            for _ in range(sections):
+                parse_table()
+
+    @property
+    def tags(self):
+        return set(self.compact_tables.keys()).union(self.display_tables.keys())
 
     def parse(self):
-        for table_id in self.tables:
+        for tag in self.compact_tables:
             try:
-                self.tables[table_id].parse(self.file)
+                self.compact_tables[tag].parse(self.file)
             except ManifestError as ex:
-                raise ManifestError(f"Unable to parse table {table_id} in file {self.path.absolute()}", ex)
+                raise ManifestError(f"Unable to parse compact table {tag} in file {self.path.absolute()}", ex)
+
+        for tag in self.display_tables:
+            try:
+                self.display_tables[tag].parse(self.file)
+            except ManifestError as ex:
+                raise ManifestError(f"Unable to parse display table {tag} in file {self.path.absolute()}", ex)
