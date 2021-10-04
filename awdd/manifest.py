@@ -84,12 +84,12 @@ class ManifestProperty:
     def __str__(self):
         return f"<PropertyDefinition parent:{self.parent.name} name:{self.name} type:{self.type} index:{hex(self.index)} flags:{hex(self.flags)}>"
 
-    def __init__(self, parent, content: bytes):
+    def __init__(self, parent):
         self.name = None
-        self.content = content
         self.parent = parent
         self.extension = False
 
+    def parse(self, content: bytes):
         reader = io.BytesIO(content)
         while reader.seek(0, io.SEEK_CUR) < len(content):
             tag, tag_length = decode_variable_length_int(reader)
@@ -253,7 +253,9 @@ class ManifestObjectDefinition(ManifestDefinition):
                 length, length_bytes = decode_variable_length_int(reader)
                 remaining_bytes -= length_bytes
 
-                self.properties.append(ManifestProperty(self, reader.read(length)))
+                prop = ManifestProperty(self)
+                prop.parse(reader.read(length))
+                self.properties.append(prop)
                 remaining_bytes -= length
 
             elif tag == ManifestObjectDefinition.TAG_CLASS_NAME or tag == ManifestObjectDefinition.TAG_EVENT_NAME:

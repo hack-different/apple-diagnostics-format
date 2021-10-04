@@ -27,4 +27,5 @@ def test_parse_manifests():
         print(f"File {manifest_file} has {len(manifest.tables)} tables\n")
         for table_id in manifest.tables:
             print(f"Table ID: {table_id} has {len(manifest.tables[table_id].rows)}\n")
+            assert(len(manifest.tables[table_id].rows) > 0)
 
