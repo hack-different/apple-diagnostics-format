@@ -1,17 +1,25 @@
 import io
 import struct
+from typing import *
+
+BYTE_PARSE_STRUCT = b'B'
 
 
-def decode_variable_length_int(reader: io.BufferedReader) -> int:
+def decode_variable_length_int(reader: io.IOBase) -> (int, int):
+    def read_bytes() -> Generator[int, None, None]:
+        byte, *_ = struct.unpack(BYTE_PARSE_STRUCT, reader.read(struct.calcsize(BYTE_PARSE_STRUCT)))
+
+        while byte & 0b1000_0000 != 0:
+            yield byte & 0b0111_1111
+            byte, *_ = struct.unpack(BYTE_PARSE_STRUCT, reader.read(struct.calcsize(BYTE_PARSE_STRUCT)))
+
+        yield byte
+
     result = 0
-    (byte) = struct.unpack(b'B', reader.read(1))
 
-    while byte & 0b1000_0000 != 0:
+    result_bytes = list(read_bytes())
+    for single_byte in reversed(result_bytes):
         result <<= 7
-        result |= (byte & 0b0111_1111)
-        (byte) = struct.unpack(b'B', reader.read(1))
+        result |= single_byte
 
-    result <<= 7
-    result |= byte
-
-    return result
+    return result, len(result_bytes)
