@@ -1,19 +1,18 @@
 import os
 from pathlib import *
-from pyasn1 import *
 import struct
-from pyasn1.codec.ber.decoder import decode
+from typing import *
+from awdd import *
 
 
 class ManifestError(Exception):
     pass
 
 
-MANIFEST_MAGIC = b'AWDM'
-HEADER_MAGIC_STRUCT = b'4sHH'
-HEADER_STRUCT_HEADER = b'I' * 7
-HEADER_STRUCT_DISPLAY = b'I' * 6
-HEADER_STRUCT_FOOTER = b'I' * 5
+class ManifestFooter:
+    def __init__(self, offset: int, size: int):
+        self.offset = offset
+        self.size = size
 
 
 class ManifestRow:
@@ -21,43 +20,63 @@ class ManifestRow:
         pass
 
 
-class ManifestDisplayRow:
-    def __init__(self, row):
-        pass
+class ManifestTable:
+    rows: List[ManifestRow]
+
+    def __init__(self, tag: int, offset: int, size: int, checksum: int):
+        self.tag = tag
+        self.offset = offset
+        self.size = size
+        self.checksum = checksum
+        self.rows = []
 
 
 class Manifest:
+    MANIFEST_MAGIC = b'AWDM'
+    HEADER_STRUCT = b'4sHH'
+    HEADER_SECTION_COUNT = b'I'
+    HEADER_SECTION_AND_COUNT = b'HH'
+    HEADER_TABLE_STRUCT = b'IIII'
+    HEADER_FOOTER_STRUCT = b'II'
+
+    TAG_TABLE = 0x02
+    TAG_DISPLAY_TABLE = 0x03
+    TAG_FOOTER = 0x04
+
     def __init__(self, path: str):
         self.path = Path(path)
         if self.path.exists() is False:
             raise ManifestError("Path does not exist")
 
         self.file = open(self.path.absolute(), "rb")
-        magic, major, minor = struct.unpack(HEADER_MAGIC_STRUCT, self.file.read(struct.calcsize(HEADER_MAGIC_STRUCT)))
-        if magic != MANIFEST_MAGIC:
-            raise ManifestError("Incorrect magic value")
-        if major != 1 or minor != 1:
-            raise ManifestError("Incompatible manifest version")
+        magic, self.major, self.minor = struct.unpack(Manifest.HEADER_STRUCT,
+                                                      self.file.read(struct.calcsize(Manifest.HEADER_STRUCT)))
 
-        _, _, _, self.tag, self.header_size, self.table_size, self.header_checksum = struct.unpack(
-            HEADER_STRUCT_HEADER, self.file.read(struct.calcsize(HEADER_STRUCT_HEADER)))
+        if magic != Manifest.MANIFEST_MAGIC:
+            raise ManifestError(f"Incorrect MAGIC (got {magic})")
 
-        _, _, self.tag, self.display_offset, self.display_size, self.display_checksum = struct.unpack(
-            HEADER_STRUCT_DISPLAY, self.file.read(struct.calcsize(HEADER_STRUCT_DISPLAY)))
+        if self.major != 1 or self.minor != 1:
+            raise ManifestError(f"Unsupported version (got {self.major}.{self.minor})")
 
-        _, _, self.footer_offset, self.footer_size, _ = struct.unpack(
-            HEADER_STRUCT_FOOTER, self.file.read(struct.calcsize(HEADER_STRUCT_FOOTER)))
+        sections, *_ = struct.unpack(Manifest.HEADER_SECTION_COUNT,
+                                     self.file.read(struct.calcsize(Manifest.HEADER_SECTION_COUNT)))
 
-        def decode_rows():
-            self.file.seek(self.header_size, os.SEEK_SET)
-            for row in decode(self.file.read(self.header_size)):
-                yield ManifestRow(row)
+        self.tables: Dict[int, ManifestTable] = {}
 
-        self.table = list(decode_rows())
+        for _ in range(sections):
+            header_id, count = struct.unpack(Manifest.HEADER_SECTION_AND_COUNT,
+                                             self.file.read(struct.calcsize(Manifest.HEADER_SECTION_AND_COUNT)))
 
-        def decode_display_row():
-            self.file.seek(self.header_size + self.table_size, os.SEEK_SET)
-            for display_row in decode(self.file.read(self.display_size)):
-                yield ManifestDisplayRow(display_row)
+            if header_id in [ Manifest.TAG_TABLE, Manifest.TAG_DISPLAY_TABLE]:
+                assert(count == 0x04)
+                tag, offset, size, checksum = \
+                    struct.unpack(Manifest.HEADER_TABLE_STRUCT,
+                                  self.file.read(struct.calcsize(Manifest.HEADER_TABLE_STRUCT)))
 
-        self.display_table = list(decode_display_row())
+                self.tables[header_id] = ManifestTable(tag, offset, size, checksum)
+            elif header_id == Manifest.TAG_FOOTER:
+                assert(count == 0x02)
+                offset, size = struct.unpack(Manifest.HEADER_FOOTER_STRUCT,
+                                             self.file.read(struct.calcsize(Manifest.HEADER_FOOTER_STRUCT)))
+            else:
+                raise ManifestError(f"Unsupported header tag of {header_id}")

@@ -10,4 +10,4 @@ def test_load_manifests():
     for manifest_file in glob(metadata_path):
         manifest = Manifest(manifest_file)
         assert(manifest is not None)
-        assert(len(manifest.table) > 1)
+        assert(len(manifest.tables) >= 1)
