@@ -20,6 +20,19 @@ Tags that are high in the lowest order bit are length prefixed (common of string
 
 Clearly we demonstrate a primordial integer vs a length prefixed sequence
 
+### Types
+
+Potential for enum or flags
+
+* `0x00` - Length encoded integer
+* `0x01` - FLAG?
+* `0x02` - Object with length prefixed multi-byte integer
+* `0x03`
+* `0x04` - FLAG?
+* `0x05`
+* `0x06`
+* `0x07`
+
 This implies that type `0x02` is some form of sequence
 
 ## Multi-byte integers
