@@ -1,5 +1,27 @@
 # Custom TLV encoding
 
+
+## Tags
+
+Tags are multi-byte integers with the lowest 3 bits being the primal type, while the remaining
+bits get shifted right (`>> 3`) to become the "index" from the definition.  This makes the 
+"timestamp" value in a log (tag `0x08`) actually type `0x00` and index `0x01` matching up with 
+definition from the ambiant root file.  Having a lowest order bit of 0x00 means that the value is
+to be interpreted as a multi-byte integer.
+
+Tags that are high in the lowest order bit are length prefixed (common of strings)
+
+* `0x08` index 1 with a type of `0x00` - e.g. "timestamp"
+* `0x10` index 2 with a type of `0x00` - PropertyDefinition.Index
+* `0x18` index 3 with a type of `0x00` - PropertyDefinition.Flags
+* `0x22` index 4 with a type of `0x02` - PropertyDefinition.Name
+* `0x0A` index 1 with a type of `0x02` - ObjectDefinition
+* `0x12` index 2 with a type of `0x02` - PropertyDefinition
+
+Clearly we demonstrate a primordial integer vs a length prefixed sequence
+
+This implies that type `0x02` is some form of sequence
+
 ## Multi-byte integers
 
 The AWDD format can encode multi-byte integers in a format similar to ASN.1
@@ -42,12 +64,16 @@ A class will be a collection of property definitions where each
 definition is a combination of property name, type (primal), flags, and
 extensions.
 
+An object definition is `TAG_CLASS_DEFINITION` followed by a length of the object definition.  It is then parsed as a
+a TAG_CLASS_NAME and a series of `TAG_PROPERTY_DEFINITION`s which are a length followed by their fields.
+
 ```python
-TAG_NAME = 0x0A # Name of the class or event
+TAG_CLASS_DEFINITION = 0x0A # Name of the class or event
+TAG_CLASS_NAME = 0x0A # The string defining the class name (optional)
 TAG_PROPERTY_DEFINITION = 0x12 # Repeated for each property
 ```
 
-Flags can be `0x00` in the case of a normal scalar property of 0x01 in the case of a
+In the context of a property flags can be `0x00` in the case of a normal scalar property of `0x01` in the case of a
 "multi-property" or a property which can occur multiple times.
 
 ```python
@@ -179,6 +205,13 @@ the `0x02000400` table with additional data for translation into text format.
 
 ## Non-tag specific
 
+```c
+struct {
+    uint32 offest
+    uint32 size
+}
+```
+
 ### Tag `0x04000200` - File Identity
 
 This region defines two values, the UUID of the file as well as it's display name.
@@ -199,3 +232,7 @@ properties on the root object defined by `0x02000400`/`0x03000400` where `tag ==
 
 This region lists all known extension properties.  These must be loaded from their
 assocated constituant extension manifests
+
+
+# Log Files
+
