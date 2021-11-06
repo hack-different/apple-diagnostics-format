@@ -30,8 +30,8 @@ class ManifestRegionType(IntEnum):
     structure = 0x02
     display = 0x03
     identity = 0x04
-    unknown5 = 0x05
-    unknown6 = 0x06
+    root = 0x05
+    linkage = 0x06
 
 
 class ManifestRegion:
