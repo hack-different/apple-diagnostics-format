@@ -29,7 +29,7 @@ class VariableLengthInteger(NamedTuple):
 def decode_variable_length_int(reader: Union[BinaryIO, io.BytesIO]) -> Optional[VariableLengthInteger]:
     def read_bytes() -> Generator[int, None, None]:
         data = reader.read(struct.calcsize(BYTE_PARSE_STRUCT))
-        if data is None:
+        if data is None or len(data) == 0:
             return
 
         byte, *_ = struct.unpack(BYTE_PARSE_STRUCT, data)
