@@ -136,6 +136,11 @@ class ManifestParser:
             self.regions.append(single_region)
 
 
+if len(sys.argv) != 2:
+    print("Usage: awdm2components.py OUTPUT_DIRECTORY")
+    exit(-1)
+
+
 # If we are called with no arguments, substitute root and all extension manifests
 files = [ROOT_MANIFEST_PATH] + glob.glob(EXTENSION_MANIFEST_PATH)
 for file in files:

@@ -45,16 +45,17 @@ class ManifestRegion(ABC):
 class ManifestProperty:
     index: int
     name: Optional[str]
-    type: PropertyType
+    type: 'PropertyType'
     flags: PropertyFlags
     version: int
-    integer_format: Optional[IntegerFormat]
+    integer_format: Optional['IntegerFormat']
     string_format: Optional[StringFormat]
     object_reference: Optional[int]
     list_item_type: Optional[int]
     extension: bool
     target: Optional[int]
     content: Optional[bytes]
+    unknowns: Dict[int, Any]
 
     TAG_INDEX = 0x01
     TAG_TYPE = 0x02
@@ -93,6 +94,7 @@ class ManifestProperty:
         self.string_format = None
         self.flags = PropertyFlags.NONE
         self.content = None
+        self.unknowns = {}
 
     def parse(self, content: bytes):
         self.content = content
@@ -119,25 +121,22 @@ class ManifestProperty:
                 try:
                     self.integer_format = IntegerFormat(tag.value)
                 except ValueError as ex:
-                    print(f"Unable to set integer format on {self.name} to {hex(value)}", ex)
+                    print(f"Unable to set integer format on {self.name} to {hex(tag.value)}", ex)
 
-            elif tag == ManifestProperty.TAG_STRING_FORMAT:
-                value, _ = decode_variable_length_int(reader)
-                self.string_format = StringFormat(value)
+            elif tag.index == ManifestProperty.TAG_STRING_FORMAT:
+                self.string_format = StringFormat(tag.value)
 
-            elif tag == ManifestProperty.TAG_NAME:
-                length, _ = decode_variable_length_int(reader)
-                self.name = reader.read(length).decode('utf-8')
+            elif tag.index == ManifestProperty.TAG_NAME:
+                self.name = tag.value.decode('utf-8')
 
-            elif tag == ManifestProperty.TAG_EXTENSION:
-                extend, _ = decode_variable_length_int(reader)
-                self.extension = False if extend == 0 else True
+            elif tag.index == ManifestProperty.TAG_EXTENSION:
+                self.extension = False if tag.value == 0 else True
 
             else:
                 # A bit dicey - but we assume that this tag has some value after, which is likely
                 # either a primitive int, or is a length to a complex type
-                value, _ = decode_variable_length_int(reader)
-                print(f"Unknown tag in property definition for {self.parent.name} ({hex(tag)}, value: {value})")
+                print(f"Unknown tag in property definition for {self.parent.name} ({hex(tag.index)}, value: {tag.value})")
+                self.unknowns[tag.index] = tag.value
 
         self.flags = PropertyFlags(self.flags)
 
@@ -159,8 +158,10 @@ class ManifestDefinition(ABC):
 
 
 class ManifestEnumMember:
-    name: str
+    name: str | int
     value: int
+    display: str
+    unknowns: Dict[int, Any]
 
     TAG_NAME = 0x01
     TAG_VALUE_INT = 0x02
@@ -170,38 +171,30 @@ class ManifestEnumMember:
         self.data = data
         remaining_bytes = len(data)
         reader = io.BytesIO(data)
+        self.unknowns = {}
 
-        while remaining_bytes > 0:
-            tag, tag_length = decode_variable_length_int(reader)
-            remaining_bytes -= tag_length
+        while tag := decode_tag(reader):
+            print(tag)
+            if tag.index == ManifestEnumMember.TAG_NAME:
+                if tag.value is str:
+                    self.name = tag.value.decode('utf-8')
+                else:
+                    self.name = tag.value
 
-            if tag == ManifestEnumMember.TAG_NAME:
-                length, size_length = decode_variable_length_int(reader)
-                remaining_bytes -= size_length
+            elif tag.index == ManifestEnumMember.TAG_VALUE_INT:
+                self.value = tag.value
 
-                self.name = reader.read(length).decode('utf-8')
-                remaining_bytes -= length
-
-            elif tag == ManifestEnumMember.TAG_VALUE_INT:
-                value, size_value = decode_variable_length_int(reader)
-                remaining_bytes -= size_value
-
-                self.value = value
-
-            elif tag == ManifestEnumMember.TAG_VALUE_SIGNED:
-                value, size_value = decode_variable_length_int(reader)
-                remaining_bytes -= size_value
-
+            elif tag.index == ManifestEnumMember.TAG_VALUE_SIGNED:
                 # TODO: this is a special INT case - seems to be twos complement of length
                 # encoded integer, value seen was '\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01'
                 # implying signed int64
 
-                self.value = value
+                self.value = tag.value
 
             else:
-                raise ManifestError(f"Unknown tag type in EnumMember definition {hex(tag)}")
+                print(f"Unknown tag type in EnumMember definition {hex(tag.index)} = {tag.value}")
+                self.unknowns[tag.index] = tag.value
 
-        assert(remaining_bytes == 0)
 
     def __str__(self):
         return f"<ManifestEnumMember {self.name} = {hex(self.value)}>"
@@ -309,40 +302,20 @@ class ManifestTable(ManifestRegion):
         return f"<ManifestTable tag:{hex(self.tag)} definitions:{len(self.rows)}>"
 
     def parse(self):
-        self.data.seek(self.offset, io.SEEK_SET)
+        stream = io.BytesIO(self.read_all())
 
-        remaining_bytes = self.size
-
-        while remaining_bytes > 0:
-            tag = None
-
-            try:
-                tag, tag_bytes = decode_variable_length_int(self.data)
-                remaining_bytes -= tag_bytes
-
-            except Exception as ex:
-                offset = self.data.seek(0, io.SEEK_CUR)
-                raise ManifestError(f"Unable to read tag at offset {offset}", ex)
-
-            if tag == ManifestTable.DEFINE_OBJECT_TAG or tag == ManifestTable.DEFINE_ENUM_TAG:
-                length, length_bytes = decode_variable_length_int(self.data)
-                remaining_bytes -= length_bytes
-
+        while tag := decode_tag(stream):
+            if tag.index == ManifestTable.DEFINE_OBJECT_TAG or tag.index == ManifestTable.DEFINE_ENUM_TAG:
                 parsed_result = None
-                if tag == ManifestTable.DEFINE_OBJECT_TAG:
-                    parsed_result = ManifestObjectDefinition(tag)
-                elif tag == ManifestTable.DEFINE_ENUM_TAG:
-                    parsed_result = ManifestEnumDefinition(tag)
+                if tag.index == ManifestTable.DEFINE_OBJECT_TAG:
+                    parsed_result = ManifestObjectDefinition(tag.index)
+                elif tag.index == ManifestTable.DEFINE_ENUM_TAG:
+                    parsed_result = ManifestEnumDefinition(tag.index)
 
-                parsed_result.parse(self.data.read(length))
+                parsed_result.parse(tag.value)
                 self.rows.append(parsed_result)
-
-                remaining_bytes -= length
-
             else:
                 raise ManifestError(f"Unknown tag type at root {tag}")
-
-        assert(remaining_bytes == 0)
 
 
 class ManifestIdentity(ManifestRegion):
@@ -419,6 +392,13 @@ class Manifest:
         while self._parse_manifest_header() is not False:
             pass
 
+    def parse(self):
+        for index in self.structure_tables:
+            self.structure_tables[index].parse()
+
+        for index in self.display_tables:
+            self.display_tables[index].parse()
+
         if self.identity:
             self.identity.parse()
 
@@ -490,7 +470,6 @@ class Manifest:
                     name = extend_value.value
                 elif extend_value.index == 2:
                     self.extensions[name] = extend_value.value
-
 
     @property
     def tags(self):

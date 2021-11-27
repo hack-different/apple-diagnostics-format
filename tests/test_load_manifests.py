@@ -12,6 +12,8 @@ def test_load_manifests():
         manifest = Manifest(manifest_file)
         assert(manifest is not None)
 
+        manifest.parse()
+
         print(f"Tag: {manifest.tag}")
         print(f"Structure Tables: {len(manifest.structure_tables)}")
         print(f"Display Tables: {len(manifest.display_tables)}")
@@ -32,6 +34,8 @@ def test_load_manifests():
 
 def test_parse_root_manifest():
     manifest = Manifest(ROOT_MANIFEST_PATH)
+
+    manifest.parse()
 
     assert(len(manifest.display_tables) > 1)
     assert(len(manifest.display_tables) > 1)

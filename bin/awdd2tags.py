@@ -24,4 +24,7 @@ with open(FILE, "rb") as stream:
             substream = io.BytesIO(tag.value)
             while subtag := decode_tag(substream):
                 print(f"\t{subtag}")
-
+                if subtag.index == 2:
+                    subdef = io.BytesIO(subtag.value)
+                    while deftag := decode_tag(subdef):
+                        print(f"\t\t{deftag}")

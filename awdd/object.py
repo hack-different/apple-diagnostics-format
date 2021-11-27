@@ -1,6 +1,7 @@
 from .manifest import *
 from abc import ABC, abstractmethod
 from enum import IntEnum, IntFlag
+from typing import *
 
 ROOT_OBJECT = None
 
