@@ -1,7 +1,9 @@
 from .manifest import *
 from abc import ABC, abstractmethod
+from enum import IntEnum, IntFlag
 
 ROOT_OBJECT = None
+
 
 class PropertyFlags(IntFlag):
     NONE = 0x00
@@ -37,6 +39,7 @@ class PropertyType(IntEnum):
     INTEGER_UNSIGNED = 0x07
     UNKNOWN_8 = 0x08
     UNKNOWN_9 = 0x09
+    UNKNOWN_10 = 0x0A
     BOOLEAN = 0x0C
     ENUM = 0x0B
     STRING = 0x0D

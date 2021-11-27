@@ -2,8 +2,19 @@ import io
 import struct
 from typing import *
 from enum import IntFlag
+from datetime import datetime, time
+
 
 BYTE_PARSE_STRUCT = b'B'
+
+
+def apple_time_to_datetime(epoch_milliseconds: int) -> datetime:
+    unix_epoch = epoch_milliseconds / 1000
+    micros = (epoch_milliseconds % 1000) * 1000
+    base_date_time = datetime.utcfromtimestamp(unix_epoch)
+    return datetime(base_date_time.year, base_date_time.month, base_date_time.day, hour=base_date_time.hour,
+                    minute=base_date_time.minute, second=base_date_time.second, microsecond=micros,
+                    tzinfo=base_date_time.tzinfo)
 
 
 class TagType(IntFlag):

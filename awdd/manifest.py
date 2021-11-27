@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from enum import IntEnum
 import os
 import io
-from datetime import time
+from datetime import time, datetime
 from pathlib import Path
 
 from . import *
@@ -12,6 +12,9 @@ from .object import *
 
 ROOT_MANIFEST_PATH = '/System/Library/PrivateFrameworks/WirelessDiagnostics.framework/Support/AWDMetadata.bin'
 EXTENSION_MANIFEST_PATH = '/System/Library/AWD/Metadata/*.bin'
+
+
+ROOT_OBJECT_TAG = 0x00
 
 
 class ManifestRegionType(IntEnum):
@@ -82,6 +85,7 @@ class ManifestProperty:
     def __init__(self, parent):
         self.type = PropertyType.UNKNOWN
         self.name = None
+        self.type_name = None
         self.parent = parent
         self.extension = False
         self.index = 0x00
@@ -93,25 +97,27 @@ class ManifestProperty:
     def parse(self, content: bytes):
         self.content = content
         reader = io.BytesIO(content)
-        while reader.seek(0, io.SEEK_CUR) < len(content):
-            tag, tag_length = decode_variable_length_int(reader)
+        while tag := decode_tag(reader):
+            if tag.index in ManifestProperty.SCALAR_INT_TAGS:
+                self.__setattr__(ManifestProperty.PROPERTY_MAP[tag.index], tag.value)
 
-            if tag in ManifestProperty.SCALAR_INT_TAGS:
-                value, _ = decode_variable_length_int(reader)
-                self.__setattr__(ManifestProperty.PROPERTY_MAP[tag], value)
+            elif tag.index == ManifestProperty.TAG_TYPE:
+                if tag.tag_type & TagType.LENGTH_PREFIX:
+                    type_extended = io.BytesIO(tag.value)
+                    while extend_tag := decode_tag(type_extended):
+                        if extend_tag.index == 0x01:
+                            self.type_name = extend_tag.value
+                        else:
+                            self.type = PropertyType(extend_tag.value)
+                else:
+                    self.type = PropertyType(tag.value)
 
-            elif tag == ManifestProperty.TAG_TYPE:
-                value, _ = decode_variable_length_int(reader)
-                self.type = PropertyType(value)
+            elif tag.index == ManifestProperty.TAG_FLAGS:
+                self.flags = PropertyFlags(tag.value)
 
-            elif tag == ManifestProperty.TAG_FLAGS:
-                value, _ = decode_variable_length_int(reader)
-                self.flags = PropertyFlags(value)
-
-            elif tag == ManifestProperty.TAG_INTEGER_FORMAT:
-                value, _ = decode_variable_length_int(reader)
+            elif tag.index == ManifestProperty.TAG_INTEGER_FORMAT:
                 try:
-                    self.integer_format = IntegerFormat(value)
+                    self.integer_format = IntegerFormat(tag.value)
                 except ValueError as ex:
                     print(f"Unable to set integer format on {self.name} to {hex(value)}", ex)
 
@@ -205,6 +211,7 @@ class ManifestEnumDefinition(ManifestDefinition):
     entries: List[ManifestEnumMember]
     name: Optional[str]
     content: Optional[bytes]
+    extend: int
 
     TAG_NAME = 0x01
     TAG_ENUM_MEMBER = 0x02
@@ -248,9 +255,11 @@ class ManifestEnumDefinition(ManifestDefinition):
 class ManifestObjectDefinition(ManifestDefinition):
     content: Optional[bytes]
     name: str
+    properties: List[ManifestProperty]
 
     TAG_NAME = 0x01
     TAG_PROPERTY_DEFINITION = 0x02
+    TAG_EXTEND = 0x0A
 
     def __init__(self, index: int):
         super().__init__(index)
@@ -266,30 +275,16 @@ class ManifestObjectDefinition(ManifestDefinition):
             return f"<ManifestObject __anonymous__ property_count:{len(self.properties)}>"
 
     def parse(self, content: bytes):
-        remaining_bytes = len(content)
         reader = io.BytesIO(content)
 
-        while remaining_bytes > 0:
-            tag, tag_length = decode_variable_length_int(reader)
-            remaining_bytes -= tag_length
-
-            if tag == ManifestObjectDefinition.TAG_PROPERTY_DEFINITION:
-                length, length_bytes = decode_variable_length_int(reader)
-                remaining_bytes -= length_bytes
-
+        while tag := decode_tag(reader):
+            if tag.index == ManifestObjectDefinition.TAG_PROPERTY_DEFINITION:
                 prop = ManifestProperty(self)
-                prop.parse(reader.read(length))
+                prop.parse(tag.value)
                 self.properties.append(prop)
-                remaining_bytes -= length
 
-            elif tag == ManifestObjectDefinition.TAG_NAME:
-                length, length_bytes = decode_variable_length_int(reader)
-                remaining_bytes -= length_bytes
-
-                if tag == ManifestObjectDefinition.TAG_NAME:
-                    self.name = reader.read(length).decode('utf-8')
-
-                remaining_bytes -= length
+            elif tag.index == ManifestObjectDefinition.TAG_NAME:
+                self.name = tag.value
 
             else:
                 raise ManifestError(f"Unknown tag {hex(tag)} in object {self.name}")
@@ -351,24 +346,26 @@ class ManifestTable(ManifestRegion):
 
 
 class ManifestIdentity(ManifestRegion):
-    TAG_UUID = 0x01
+    TAG_HASH = 0x01
     TAG_NAME = 0x02
     TAG_TIMESTAMP = 0x03
 
-    uuid: UUID
+    hash: bytes  # SHA1 Hash
     name: str
-    timestamp: time
+    timestamp: datetime
 
     def __init__(self, manifest: 'Manifest', data: BinaryIO, kind: ManifestRegionType, offset: int, size: int):
         super().__init__(manifest, data, kind, offset, size)
+
+    def parse(self):
         reader = io.BytesIO(self.read_all())
         while (tag := decode_tag(reader)) is not None:
-            if tag.index == ManifestIdentity.TAG_UUID:
-                self.uuid = UUID(tag.value)
+            if tag.index == ManifestIdentity.TAG_HASH:
+                self.hash = bytes.fromhex(tag.value.decode('ascii'))
             elif tag.index == ManifestIdentity.TAG_NAME:
-                self.name = tag.value
+                self.name = tag.value.decode('utf-8')
             elif tag.index == ManifestIdentity.TAG_TIMESTAMP:
-                self.timestamp = time(tag.value)
+                self.timestamp = apple_time_to_datetime(tag.value)
             else:
                 raise ManifestError(f'Tag index {tag.index} not known in the context of a manifest identity')
 
@@ -387,7 +384,9 @@ class Manifest:
     display_tables: Dict[int, ManifestTable]
     identity: ManifestIdentity
     root: Optional[ManifestObjectDefinition]
+    root_region: Optional[ManifestRegion]
     extensions: Optional[Dict[str, int]]
+    extension_region: Optional[ManifestRegion]
     file: BinaryIO
 
     def __str__(self):
@@ -420,12 +419,25 @@ class Manifest:
         while self._parse_manifest_header() is not False:
             pass
 
+        if self.identity:
+            self.identity.parse()
+
+        if self.root_region:
+            self.root = ManifestObjectDefinition(0)
+            self.root.parse(self.root_region.read_all())
+
+        if self.extension_region:
+            self._parse_extension_points()
+
         # Meh, we could have checked the number of sections but both root and non root end with 0x00000000
 
     # If we get a tag of 0 return false so that we know to stop a root manifest parse
     def _parse_manifest_header(self) -> bool:
-        header_tag, field_count = struct.unpack(Manifest.HEADER_SECTION_AND_COUNT,
-                                                self.file.read(struct.calcsize(Manifest.HEADER_SECTION_AND_COUNT)))
+        tag_bytes = self.file.read(struct.calcsize(Manifest.HEADER_SECTION_AND_COUNT))
+        if not tag_bytes or len(tag_bytes) != struct.calcsize(Manifest.HEADER_SECTION_AND_COUNT):
+            return False
+
+        header_tag, field_count = struct.unpack(Manifest.HEADER_SECTION_AND_COUNT, tag_bytes)
 
         if header_tag is 0 and field_count is 0:
             return False
@@ -447,16 +459,38 @@ class Manifest:
 
             return True
 
-        elif parsed_tag == ManifestRegionType.identity:
+        else:
             offset, size = struct.unpack(Manifest.HEADER_FOOTER_STRUCT,
                                          self.file.read(struct.calcsize(Manifest.HEADER_FOOTER_STRUCT)))
 
-            self.identity = ManifestIdentity(self, self.file, parsed_tag, offset, size)
+            if parsed_tag == ManifestRegionType.identity:
+                self.identity = ManifestIdentity(self, self.file, parsed_tag, offset, size)
+            elif parsed_tag == ManifestRegionType.root:
+                self.root_region = ManifestRegion(self, self.file, parsed_tag, offset, size)
+            elif parsed_tag == ManifestRegionType.extensions:
+                self.extension_region = ManifestRegion(self, self.file, parsed_tag, offset, size)
 
             return True
 
-        else:
-            raise ManifestError(f"Unsupported header tag at {header_tag} count {field_count}")
+    def _parse_extension_points(self):
+        if not self.extension_region:
+            return
+
+        self.extensions = {}
+
+        extension_data = self.extension_region.read_all()
+        extension_stream = io.BytesIO(extension_data)
+        while extension_point := decode_tag(extension_stream):
+            assert(extension_point.index == 1)  # Only known type in this region is EXTEND_POINT
+            extend_stream = io.BytesIO(extension_point.value)
+
+            name = ''
+            while extend_value := decode_tag(extend_stream):
+                if extend_value.index == 1:  # Name value
+                    name = extend_value.value
+                elif extend_value.index == 2:
+                    self.extensions[name] = extend_value.value
+
 
     @property
     def tags(self):
