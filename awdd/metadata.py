@@ -7,8 +7,6 @@ class Metadata:
     root_manifest: Manifest
     extension_manifests: List[Manifest]
 
-
-
     def __init__(self):
         self.root_manifest = Manifest(ROOT_MANIFEST_PATH)
 

@@ -7,9 +7,14 @@ from awdd.parser import LogParser
 
 
 def test_parse_manifests():
-    metadata_path = os.path.join(os.path.dirname(__file__), "../rosetta/awdd.bin")
+    path_to_current_file = os.path.realpath(__file__)
+    current_directory = os.path.dirname(path_to_current_file)
+    awdd_fixture = os.path.join(current_directory, "../rosetta/awdd.bin")
 
-    parser = LogParser(open(metadata_path, "rb"), use_default_manifests=True)
+    parser = LogParser()
+
+    # Parse a fixture piece of data
+    result = parser.parse(awdd_fixture)
 
     output_buffer = io.StringIO()
     parser.output_text(output_buffer)

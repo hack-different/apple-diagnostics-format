@@ -1,0 +1,2 @@
+from awdd.manifest import *
+

@@ -46,12 +46,13 @@ class PropertyType(IntEnum):
     UNKNOWN_20 = 0x14
     OBJECT = 0x1B
 
+
 class DiagnosticValue:
-    property: ManifestProperty
+    property: 'ManifestProperty'
 
 
 class DiagnosticObject:
-    object_class: ManifestObjectDefinition
+    object_class: 'ManifestObjectDefinition'
     properties: List[DiagnosticValue]
 
 

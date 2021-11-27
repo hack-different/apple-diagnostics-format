@@ -8,6 +8,8 @@ BYTE_PARSE_STRUCT = b'B'
 
 class TagType(IntFlag):
     NONE = 0b000
+    # Guess: Size Fixed known from format, encapsulated C struct
+    EXTENSION = 0b001
     LENGTH_PREFIX = 0b010
     REPEATED = 0b100
 
@@ -66,22 +68,19 @@ def decode_tag(reader: io.IOBase) -> Optional[Tag]:
 
     encoded_tag, length = result
 
-    type_bits = encoded_tag & 0b111
+    type_bits = TagType(encoded_tag & 0b111)
     index_bits = encoded_tag >> 3
 
-    if type_bits == TagType.STRING:
+    if type_bits & TagType.LENGTH_PREFIX:
         string_length, length_length = decode_variable_length_int(reader)
         value = reader.read(string_length)
-        return Tag(index=index_bits, tag_type=TagType(type_bits), length=length + length_length + string_length,
+        return Tag(index=index_bits, tag_type=type_bits, length=length + length_length + string_length,
                    value=value)
 
-    elif type_bits == TagType.INTEGER:
+    else:
         value, value_length = decode_variable_length_int(reader)
 
-        return Tag(index=index_bits, tag_type=TagType(type_bits), length=length + value_length, value=value)
-
-    else:
-        Exception('Unknown tag type')
+        return Tag(index=index_bits, tag_type=type_bits, length=length + value_length, value=value)
 
 
 class Parser:
