@@ -8,6 +8,10 @@ from datetime import datetime, time
 BYTE_PARSE_STRUCT = b'B'
 
 
+class ManifestError(Exception):
+    pass
+
+
 def apple_time_to_datetime(epoch_milliseconds: int) -> datetime:
     unix_epoch = epoch_milliseconds / 1000
     micros = (epoch_milliseconds % 1000) * 1000
@@ -72,7 +76,9 @@ encoded as in email 7bit encoding (MIME)
 """
 
 
-def decode_tag(reader: io.IOBase) -> Optional[Tag]:
+def decode_tag(data: Union[io.IOBase, bytes]) -> Optional[Tag]:
+    reader = io.BytesIO(data) if isinstance(data, bytes) else data
+
     result = decode_variable_length_int(reader)
     if result is None:
         return None
@@ -94,9 +100,12 @@ def decode_tag(reader: io.IOBase) -> Optional[Tag]:
         return Tag(index=index_bits, tag_type=type_bits, length=length + value_length, value=value)
 
 
-class Parser:
-    def __init__(self):
-        pass
+def decode_tags(data: Union[bytes, io.IOBase]) -> List[Tag]:
+    reader = io.BytesIO(data) if isinstance(data, bytes) else data
 
-    def parse(self) -> Generator[Tag, None, None]:
-        pass
+    result = []
+    while tag := decode_tag(reader):
+        result.append(tag)
+
+    return result
+

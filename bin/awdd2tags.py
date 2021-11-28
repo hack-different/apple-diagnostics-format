@@ -4,9 +4,9 @@ import sys
 import os
 import inspect
 
-currentdir = os.path.dirname(os.path.abspath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 
 from awdd import decode_tag, TagType
 
@@ -21,8 +21,8 @@ with open(FILE, "rb") as stream:
     while tag := decode_tag(stream):
         print(tag)
         if tag.tag_type & TagType.LENGTH_PREFIX:
-            substream = io.BytesIO(tag.value)
-            while subtag := decode_tag(substream):
+            sub_stream = io.BytesIO(tag.value)
+            while subtag := decode_tag(sub_stream):
                 print(f"\t{subtag}")
                 if subtag.index == 2:
                     subdef = io.BytesIO(subtag.value)
