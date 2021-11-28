@@ -150,8 +150,7 @@ class Manifest:
             self.identity.parse()
 
         if self.root_region:
-            self.root = ManifestObjectDefinition(0)
-            self.root.parse(self.root_region.read_all())
+            self.root = ManifestObjectDefinition.from_bytes(self.root_region.read_all())
 
         if self.extension_region:
             self._parse_extension_points()

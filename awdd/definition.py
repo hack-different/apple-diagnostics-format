@@ -49,6 +49,12 @@ class PropertyType(IntEnum):
     OBJECT = 0x1B
 
 
+class PropertySensitivity(IntEnum):
+    NONE = 0x00
+    SENSITIVE = 0x01
+    PRIVATE = 0x03
+
+
 class ManifestProperty:
     index: int
     name: Optional[str]
@@ -62,7 +68,7 @@ class ManifestProperty:
     extension: bool
     target: Optional[int]
     content: Optional[bytes]
-    unknowns: Dict[int, Any]
+    sensitivity: PropertySensitivity
 
     TAG_INDEX = 0x01
     TAG_TYPE = 0x02
@@ -75,14 +81,22 @@ class ManifestProperty:
     TAG_INTEGER_FORMAT = 0x09
     TAG_EXTENSION = 0x0A
     TAG_EXTENSION_TARGET = 0x0B
+    TAG_SENSITIVITY = 0x0C
+
 
     PROPERTY_MAP = {
-        TAG_INDEX: 'index',
         TAG_NAME: 'name',
+        TAG_INDEX: 'index',
+        TAG_TYPE: 'type',
+        TAG_FLAGS: 'flags',
         TAG_OBJECT_REFERENCE: 'object_reference',
+        TAG_STRING_FORMAT: 'string_format',
         TAG_LIST_ITEM_TYPE: 'list_item_type',
         TAG_ENUM_INDEX: 'enum',
-        TAG_EXTENSION_TARGET: 'target'
+        TAG_INTEGER_FORMAT: 'integer_format',
+        TAG_EXTENSION: 'extension',
+        TAG_EXTENSION_TARGET: 'target',
+        TAG_SENSITIVITY: 'sensitivity'
     }
 
     def __str__(self):
@@ -104,12 +118,11 @@ class ManifestProperty:
 
     def parse(self, content: bytes):
         self.content = content
-        reader = io.BytesIO(content)
-        while tag := decode_tag(reader):
-            if not tag.tag_type & TagType.LENGTH_PREFIX:
-                self.__setattr__(ManifestProperty.PROPERTY_MAP[tag.index], tag.value)
 
-            elif tag.index == ManifestProperty.TAG_TYPE:
+        tags = decode_tags(content)
+
+        for tag in tags:
+            if tag.index == ManifestProperty.TAG_TYPE:
                 if tag.tag_type & TagType.LENGTH_PREFIX:
                     type_extended = io.BytesIO(tag.value)
                     while extend_tag := decode_tag(type_extended):
@@ -139,11 +152,7 @@ class ManifestProperty:
                 self.extension = False if tag.value == 0 else True
 
             else:
-                # A bit dicey - but we assume that this tag has some value after, which is likely
-                # either a primitive int, or is a length to a complex type
-                print(
-                    f"Unknown tag in property definition for {self.parent.name} ({hex(tag.index)}, value: {tag.value})")
-                self.unknowns[tag.index] = tag.value
+                self.__setattr__(ManifestProperty.PROPERTY_MAP[tag.index], tag.value)
 
         self.flags = PropertyFlags(self.flags)
 
@@ -240,28 +249,15 @@ class ManifestEnumDefinition(ManifestDefinition):
 
     def parse(self, data: bytes):
         self.content = data
-        remaining_bytes = len(data)
-        reader = io.BytesIO(data)
 
-        while remaining_bytes > 0:
-            tag, tag_length = decode_variable_length_int(reader)
-            remaining_bytes -= tag_length
+        tags = decode_tags(data)
 
+        for tag in tags:
             if tag == ManifestEnumDefinition.TAG_NAME:
-                length, length_bytes = decode_variable_length_int(reader)
-                remaining_bytes -= length_bytes
-
-                self.name = reader.read(length).decode('utf-8')
-                remaining_bytes -= length
+                self.name = tag.value.decode('utf-8')
 
             elif tag == ManifestEnumDefinition.TAG_ENUM_MEMBER:
-                length, length_bytes = decode_variable_length_int(reader)
-                remaining_bytes -= length_bytes
-
-                member = ManifestEnumMember(reader.read(length))
-                self.entries.append(member)
-
-                remaining_bytes -= length
+                self.entries.append(ManifestEnumMember(tag.value))
 
 
 class ManifestObjectDefinition(ManifestDefinition):
