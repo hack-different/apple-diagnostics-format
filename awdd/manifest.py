@@ -16,7 +16,8 @@ ROOT_OBJECT_TAG = 0x00
 
 class CompositeDefinition(NamedTuple):
     tag: int
-    definition: ManifestDefinition
+    structure: ManifestDefinition
+    display: ManifestDefinition
 
 
 class ManifestRegionType(IntEnum):
@@ -121,7 +122,7 @@ class Manifest:
         self.is_root = False
         self.structure_tables = {}
         self.display_tables = {}
-        self.root_region = None
+        self.types_region = None
         self.extension_region = None
         self.path = Path(path)
         if self.path.exists() is False:
@@ -149,8 +150,8 @@ class Manifest:
     def definitions(self) -> Generator[CompositeDefinition, None, None]:
         for tag in self.tags:
             tag_class = tag << 16
-            for entry in self.display_tables[tag].rows:
-                yield CompositeDefinition((entry.index+1) | tag_class, entry)
+            for entry in zip(self.structure_tables[tag].rows, self.display_tables[tag].rows):
+                yield CompositeDefinition(entry[0].index | tag_class, entry[0], entry[1])
 
     def parse(self):
         for index in self.structure_tables:
@@ -162,7 +163,7 @@ class Manifest:
         if self.identity:
             self.identity.parse()
 
-        if self.root_region:
+        if self.types_region:
             tags = decode_tags(self.types_region.read_all())
             self.types = []
             for index, tag in enumerate(tags):

@@ -11,8 +11,10 @@ class PropertyFlags(IntFlag):
 
 class IntegerFormat(IntEnum):
     TIMESTAMP = 0x01
+    METRIC_ID = 0x02
     TRIGGER_ID = 0x03
     PROFILE_ID = 0x04
+    COMPONENT_ID = 0x05
     AVERAGE_TIME = 0x15
     TIME_DELTA = 0x16
     TIMEZONE_OFFSET = 0x17
@@ -64,11 +66,11 @@ class ManifestProperty:
     version: int
     integer_format: Optional[IntegerFormat]
     string_format: Optional[StringFormat]
-    object_reference: Optional[int]
-    list_item_type: Optional[int]
+    object_reference: Union[None, int, 'ManifestDefinition']
+    object_type: Union[None, int, 'ManifestDefinition']
     extension: bool
-    target: Optional[int]
-    content: Optional[bytes]
+    target: Union[None, int, 'ManifestDefinition']
+    content: List[Tag]
     sensitivity: PropertySensitivity
 
     TAG_INDEX = 0x01
@@ -77,7 +79,7 @@ class ManifestProperty:
     TAG_NAME = 0x04
     TAG_OBJECT_REFERENCE = 0x05
     TAG_STRING_FORMAT = 0x06
-    TAG_LIST_ITEM_TYPE = 0x07
+    TAG_OBJECT_TYPE = 0x07
     TAG_ENUM_INDEX = 0x08
     TAG_INTEGER_FORMAT = 0x09
     TAG_EXTENSION = 0x0A
@@ -91,7 +93,7 @@ class ManifestProperty:
         TAG_FLAGS: 'flags',
         TAG_OBJECT_REFERENCE: 'object_reference',
         TAG_STRING_FORMAT: 'string_format',
-        TAG_LIST_ITEM_TYPE: 'list_item_type',
+        TAG_OBJECT_TYPE: 'object_type',
         TAG_ENUM_INDEX: 'enum',
         TAG_INTEGER_FORMAT: 'integer_format',
         TAG_EXTENSION: 'extension',
@@ -113,15 +115,12 @@ class ManifestProperty:
         self.integer_format = None
         self.string_format = None
         self.flags = PropertyFlags.NONE
-        self.content = None
         self.unknowns = {}
 
     def parse(self, content: bytes):
-        self.content = content
+        self.content = decode_tags(content)
 
-        tags = decode_tags(content)
-
-        for tag in tags:
+        for tag in self.content:
             if tag.index == ManifestProperty.TAG_TYPE:
                 if tag.tag_type & TagType.LENGTH_PREFIX:
                     type_extended = io.BytesIO(tag.value)
@@ -142,7 +141,7 @@ class ManifestProperty:
             elif tag.index == ManifestProperty.TAG_INTEGER_FORMAT:
                 try:
                     self.integer_format = IntegerFormat(tag.value)
-                except ValueError as ex:
+                except Exception as ex:
                     raise ManifestError(f"Unable to set integer format on {self.name} to {hex(tag.value)}", ex)
 
             elif tag.index == ManifestProperty.TAG_STRING_FORMAT:
@@ -165,6 +164,13 @@ class ManifestProperty:
             raise ManifestError(
                 f"Unable to set type for property {self.name if self.name is not None else 'anonymous'} for class "
                 "{self.parent.name} to type {hex(self.type)}")
+
+    def bind(self, defs: Dict[int, 'ManifestDefinition']):
+        if self.type == PropertyType.OBJECT:
+            if self.object_type not in defs:
+                print(f"Invalid Tag?")
+            else:
+                self.object_type = defs[self.object_type]
 
 
 T = TypeVar('T', bound='ManifestDefinition')
@@ -191,6 +197,9 @@ class ManifestDefinition(ABC):
         result = cls(index)
         result.parse(data)
         return result
+
+    def bind(self, defs: Dict[int, 'ManifestDefinition']):
+        pass
 
 
 class ManifestEnumMember:
@@ -235,7 +244,7 @@ class ManifestTypeDefinition(ManifestDefinition):
     TAG = 2
     entries: List[ManifestEnumMember]
     name: Optional[str]
-    content: Optional[bytes]
+    content: List[Tag]
     extend: int
 
     TAG_NAME = 0x01
@@ -246,17 +255,14 @@ class ManifestTypeDefinition(ManifestDefinition):
         super().__init__(index)
         self.entries = []
         self.name = None
-        self.content = None
 
     def __str__(self):
         return f"<ManifestEnumDefinition {self.name} value_count:{len(self.entries)}>"
 
     def parse(self, data: bytes):
-        self.content = data
+        self.content = decode_tags(data)
 
-        tags = decode_tags(data)
-
-        for index, tag in enumerate(tags):
+        for index, tag in enumerate(self.content):
             if tag.index == ManifestTypeDefinition.TAG_NAME:
                 self.name = tag.value.decode('utf-8')
 
@@ -264,7 +270,7 @@ class ManifestTypeDefinition(ManifestDefinition):
                 self.entries.append(ManifestEnumMember(index, tag.value))
 
             else:
-                print(f"Unknown property in type {self.name} - {tag.index} ({tag.value})")
+                raise ManifestError(f"Unknown property in type {self.name} - {tag.index} ({tag.value})")
 
 
 class ManifestObjectDefinition(ManifestDefinition):
@@ -304,3 +310,7 @@ class ManifestObjectDefinition(ManifestDefinition):
 
             else:
                 raise ManifestError(f"Unknown tag {hex(tag.index)} in object {self.name}")
+
+    def bind(self, defs: Dict[int, 'ManifestDefinition']):
+        for prop in self.properties:
+            prop.bind(defs)
