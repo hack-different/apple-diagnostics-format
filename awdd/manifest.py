@@ -14,11 +14,16 @@ EXTENSION_MANIFEST_PATH = '/System/Library/AWD/Metadata/*.bin'
 ROOT_OBJECT_TAG = 0x00
 
 
+class CompositeDefinition(NamedTuple):
+    tag: int
+    definition: ManifestDefinition
+
+
 class ManifestRegionType(IntEnum):
     structure = 0x02    # Compact representation of the metadata
     display = 0x03      # Metadata intended for display
     identity = 0x04     # The UUID and source file which the file was generated from
-    root = 0x05         # Properties on the root object definition
+    types = 0x05        # Ambient global types
     extensions = 0x06   # Extended values for the root metrics object
 
 
@@ -41,7 +46,7 @@ class ManifestTable(ManifestRegion):
     SINGLE_BYTE_TAG_STRUCT = b'B'
 
     objects: List[ManifestDefinition]
-    enums: List[ManifestEnumDefinition]
+    enums: List[ManifestTypeDefinition]
     is_root: bool
 
     def __init__(self, manifest: 'Manifest', data: BinaryIO, kind: ManifestRegionType, tag: int, offset: int, size: int, checksum: int):
@@ -56,11 +61,11 @@ class ManifestTable(ManifestRegion):
     def parse(self):
         tags = decode_tags(self.read_all())
 
-        for tag in tags:
+        for index, tag in enumerate(tags):
             if tag.index == ManifestTable.DEFINE_OBJECT_TAG:
-                self.rows.append(ManifestObjectDefinition.from_tag(tag))
+                self.rows.append(ManifestObjectDefinition.from_tag(index, tag))
             elif tag.index == ManifestTable.DEFINE_ENUM_TAG:
-                self.rows.append(ManifestEnumDefinition.from_tag(tag))
+                self.rows.append(ManifestTypeDefinition.from_tag(index, tag))
             else:
                 raise ManifestError(f"Unknown tag type at root {tag}")
 
@@ -103,9 +108,9 @@ class Manifest:
     structure_tables: Dict[int, ManifestTable]
     display_tables: Dict[int, ManifestTable]
     identity: ManifestIdentity
-    root: Optional[ManifestObjectDefinition]
-    root_region: Optional[ManifestRegion]
-    extensions: Optional[Dict[str, int]]
+    types: List[ManifestDefinition]
+    types_region: Optional[ManifestRegion]
+    extensions: Optional[Dict[int, str]]
     extension_region: Optional[ManifestRegion]
     file: BinaryIO
 
@@ -141,6 +146,12 @@ class Manifest:
         while self._parse_manifest_header() is not False:
             pass
 
+    def definitions(self) -> Generator[CompositeDefinition, None, None]:
+        for tag in self.tags:
+            tag_class = tag << 16
+            for entry in self.display_tables[tag].rows:
+                yield CompositeDefinition((entry.index+1) | tag_class, entry)
+
     def parse(self):
         for index in self.structure_tables:
             self.structure_tables[index].parse()
@@ -152,7 +163,13 @@ class Manifest:
             self.identity.parse()
 
         if self.root_region:
-            self.root = ManifestObjectDefinition.from_bytes(self.root_region.read_all())
+            tags = decode_tags(self.types_region.read_all())
+            self.types = []
+            for index, tag in enumerate(tags):
+                if tag.index == 1:
+                    self.types.append(ManifestObjectDefinition.from_tag(index, tag))
+                elif tag.index == 2:
+                    self.types.append(ManifestTypeDefinition.from_tag(index, tag))
 
         if self.extension_region:
             self._parse_extension_points()
@@ -193,8 +210,8 @@ class Manifest:
 
             if parsed_tag == ManifestRegionType.identity:
                 self.identity = ManifestIdentity(self, self.file, parsed_tag, offset, size)
-            elif parsed_tag == ManifestRegionType.root:
-                self.root_region = ManifestRegion(self, self.file, parsed_tag, offset, size)
+            elif parsed_tag == ManifestRegionType.types:
+                self.types_region = ManifestRegion(self, self.file, parsed_tag, offset, size)
             elif parsed_tag == ManifestRegionType.extensions:
                 self.extension_region = ManifestRegion(self, self.file, parsed_tag, offset, size)
 
@@ -217,7 +234,7 @@ class Manifest:
                 if extend_value.index == 1:  # Name value
                     name = extend_value.value
                 elif extend_value.index == 2:
-                    self.extensions[name] = extend_value.value
+                    self.extensions[extend_value.value] = name
 
     @property
     def tags(self):

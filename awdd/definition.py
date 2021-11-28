@@ -143,7 +143,7 @@ class ManifestProperty:
                 try:
                     self.integer_format = IntegerFormat(tag.value)
                 except ValueError as ex:
-                    print(f"Unable to set integer format on {self.name} to {hex(tag.value)}", ex)
+                    raise ManifestError(f"Unable to set integer format on {self.name} to {hex(tag.value)}", ex)
 
             elif tag.index == ManifestProperty.TAG_STRING_FORMAT:
                 self.string_format = StringFormat(tag.value)
@@ -162,7 +162,7 @@ class ManifestProperty:
         try:
             self.type = PropertyType(self.type)
         except ValueError:
-            print(
+            raise ManifestError(
                 f"Unable to set type for property {self.name if self.name is not None else 'anonymous'} for class "
                 "{self.parent.name} to type {hex(self.type)}")
 
@@ -173,39 +173,41 @@ T = TypeVar('T', bound='ManifestDefinition')
 class ManifestDefinition(ABC):
     TAG = 0
 
+    def __init__(self, index: int):
+        self.index = index
+
     @abstractmethod
     def parse(self, data: bytes):
         pass
 
     @classmethod
-    def from_tag(cls: Type[T], tag: Tag) -> T:
+    def from_tag(cls: Type[T], index: int, tag: Tag) -> T:
         if tag.index != cls.TAG:
             raise ManifestError(f"Attempted to parse the wrong definition, value {tag.index} is not of type {cls.TAG}")
-        return cls.from_bytes(tag.value)
+        return cls.from_bytes(index, tag.value)
 
     @classmethod
-    def from_bytes(cls: Type[T], data: bytes) -> T:
-        result = cls()
+    def from_bytes(cls: Type[T], index: int, data: bytes) -> T:
+        result = cls(index)
         result.parse(data)
+        return result
 
 
 class ManifestEnumMember:
     name: str | int
     value: int
     display: str
-    unknowns: Dict[int, Any]
 
     TAG_NAME = 0x01
     TAG_VALUE_INT = 0x02
     TAG_VALUE_SIGNED = 0x03
 
-    def __init__(self, data: bytes):
+    def __init__(self, index: int, data: bytes):
+        self.index = index
         self.data = data
         reader = io.BytesIO(data)
-        self.unknowns = {}
 
         while tag := decode_tag(reader):
-            print(tag)
             if tag.index == ManifestEnumMember.TAG_NAME:
                 if tag.value is str:
                     self.name = tag.value.decode('utf-8')
@@ -223,14 +225,13 @@ class ManifestEnumMember:
                 self.value = tag.value
 
             else:
-                print(f"Unknown tag type in EnumMember definition {hex(tag.index)} = {tag.value}")
-                self.unknowns[tag.index] = tag.value
+                raise ManifestError(f"Unknown tag type in EnumMember definition {hex(tag.index)} = {tag.value}")
 
     def __str__(self):
         return f"<ManifestEnumMember {self.name} = {hex(self.value)}>"
 
 
-class ManifestEnumDefinition(ManifestDefinition):
+class ManifestTypeDefinition(ManifestDefinition):
     TAG = 2
     entries: List[ManifestEnumMember]
     name: Optional[str]
@@ -241,8 +242,8 @@ class ManifestEnumDefinition(ManifestDefinition):
     TAG_ENUM_MEMBER = 0x02
     TAG_ENUM_MEMBER_NAME = 0x1E
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, index):
+        super().__init__(index)
         self.entries = []
         self.name = None
         self.content = None
@@ -255,17 +256,20 @@ class ManifestEnumDefinition(ManifestDefinition):
 
         tags = decode_tags(data)
 
-        for tag in tags:
-            if tag == ManifestEnumDefinition.TAG_NAME:
+        for index, tag in enumerate(tags):
+            if tag.index == ManifestTypeDefinition.TAG_NAME:
                 self.name = tag.value.decode('utf-8')
 
-            elif tag == ManifestEnumDefinition.TAG_ENUM_MEMBER:
-                self.entries.append(ManifestEnumMember(tag.value))
+            elif tag.index == ManifestTypeDefinition.TAG_ENUM_MEMBER:
+                self.entries.append(ManifestEnumMember(index, tag.value))
+
+            else:
+                print(f"Unknown property in type {self.name} - {tag.index} ({tag.value})")
 
 
 class ManifestObjectDefinition(ManifestDefinition):
     TAG = 1
-    content: Optional[bytes]
+    content: List[Tag]
     name: str
     properties: List[ManifestProperty]
 
@@ -273,12 +277,12 @@ class ManifestObjectDefinition(ManifestDefinition):
     TAG_PROPERTY_DEFINITION = 0x02
     TAG_EXTEND = 0x0A
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, index):
+        super().__init__(index)
 
         self.name = '__anonymous__'
         self.properties = []
-        self.content = None
+        self.content = []
 
     def __str__(self):
         if self.name is not None:
@@ -287,9 +291,9 @@ class ManifestObjectDefinition(ManifestDefinition):
             return f"<ManifestObject __anonymous__ property_count:{len(self.properties)}>"
 
     def parse(self, content: bytes):
-        reader = io.BytesIO(content)
+        self.content = decode_tags(content)
 
-        while tag := decode_tag(reader):
+        for tag in self.content:
             if tag.index == ManifestObjectDefinition.TAG_PROPERTY_DEFINITION:
                 prop = ManifestProperty(self)
                 prop.parse(tag.value)

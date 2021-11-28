@@ -1,6 +1,7 @@
 import pytest
 import os
 from glob import glob
+from awdd.metadata import *
 from awdd.manifest import *
 
 
@@ -63,3 +64,6 @@ def test_extension_parse_manifests():
         assert(len(manifest.structure_tables) == 1)
 
 
+def test_resolve_metadata():
+    metadata = Metadata()
+    metadata.resolve()

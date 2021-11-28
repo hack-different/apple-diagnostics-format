@@ -6,6 +6,7 @@ from glob import glob
 class Metadata:
     root_manifest: Manifest
     extension_manifests: List[Manifest]
+    all_definitions: Dict[int, ManifestDefinition]
 
     def __init__(self):
         self.root_manifest = Manifest(ROOT_MANIFEST_PATH)
@@ -13,4 +14,18 @@ class Metadata:
         self.extension_manifests = [Manifest(path) for path in glob(EXTENSION_MANIFEST_PATH)]
 
     def resolve(self):
-        pass
+        self.root_manifest.parse()
+
+        for manifest in self.extension_manifests:
+            manifest.parse()
+
+        self.all_definitions = {}
+
+        for definition in self.root_manifest.definitions():
+            self.all_definitions[definition.tag] = definition.definition
+
+        for extension in self.extension_manifests:
+            for definition in extension.definitions():
+                self.all_definitions[definition.tag] = definition.definition
+
+        print(len(self.all_definitions))
