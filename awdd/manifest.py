@@ -116,6 +116,8 @@ class Manifest:
         self.is_root = False
         self.structure_tables = {}
         self.display_tables = {}
+        self.root_region = None
+        self.extension_region = None
         self.path = Path(path)
         if self.path.exists() is False:
             raise ManifestError("Path does not exist")

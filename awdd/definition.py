@@ -33,26 +33,27 @@ class PropertyType(IntEnum):
     FLOAT = 0x02
     INTEGER_64 = 0x03
     INTEGER = 0x04
-    UNKNOWN_5 = 0x05
+    ERROR_CODE = 0x05
     INTEGER_32 = 0x06
     INTEGER_UNSIGNED = 0x07
-    UNKNOWN_8 = 0x08
-    UNKNOWN_9 = 0x09
-    UNKNOWN_10 = 0x0A
+    BYTE_COUNT = 0x08
+    SEQUENCE_NUMBER = 0x09
+    BEDF_OPERATOR = 0x0A
     BOOLEAN = 0x0C
     ENUM = 0x0B
     STRING = 0x0D
     BYTES = 0x0E
     PACKED_UINT_32 = 0x15
-    UNKNOWN_17 = 0x11
-    UNKNOWN_20 = 0x14
+    PACKED_TIMES = 0x11
+    PACKED_ERRORS = 0x14
     OBJECT = 0x1B
 
 
 class PropertySensitivity(IntEnum):
-    NONE = 0x00
-    SENSITIVE = 0x01
-    PRIVATE = 0x03
+    UNKNOWN = 0x00
+    PUBLIC = 0x01
+    PRIVATE = 0x02
+    SENSITIVE = 0x03
 
 
 class ManifestProperty:
@@ -82,7 +83,6 @@ class ManifestProperty:
     TAG_EXTENSION = 0x0A
     TAG_EXTENSION_TARGET = 0x0B
     TAG_SENSITIVITY = 0x0C
-
 
     PROPERTY_MAP = {
         TAG_NAME: 'name',
@@ -135,6 +135,9 @@ class ManifestProperty:
 
             elif tag.index == ManifestProperty.TAG_FLAGS:
                 self.flags = PropertyFlags(tag.value)
+
+            elif tag.index == ManifestProperty.TAG_SENSITIVITY:
+                self.sensitivity = PropertySensitivity(tag.value)
 
             elif tag.index == ManifestProperty.TAG_INTEGER_FORMAT:
                 try:

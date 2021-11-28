@@ -50,7 +50,6 @@ def test_parse_root_manifest():
         print(f"Tag {hex(tag)} has {len(manifest.structure_tables[tag].rows)} compact rows and {len(manifest.display_tables[tag].rows)} display rows")
 
 
-
 def test_extension_parse_manifests():
     for manifest_file in glob(EXTENSION_MANIFEST_PATH):
         print(f"Reading in test data file {manifest_file}\n")
