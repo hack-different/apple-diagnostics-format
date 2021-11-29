@@ -408,6 +408,6 @@ class ManifestObjectDefinition(ManifestDefinition):
             prop.bind(types, enums, objects)
 
     def extend(self):
-        for prop in self.properties:
+        for prop in list(self.properties):
             if prop.extends:
                 prop.extend()
