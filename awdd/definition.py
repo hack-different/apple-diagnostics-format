@@ -118,17 +118,19 @@ class ManifestProperty:
     name: Optional[str]
     type: PropertyType
     flags: PropertyFlags
-    version: int
     pii: bool
+
     integer_format: Optional[IntegerFormat]
     string_format: Optional[StringFormat]
+
     object_type: Union[None, int, 'ManifestObjectDefinition']
-    extension_scope: ManifestExtensionScopeType
-    extends: Union[None, int, 'ManifestDefinition']
+    enum_type: Union[None, int, 'ManifestTypeDefinition']
+
     target: Union[None, int, 'ManifestDefinition']
-    enum: Union[None, int, 'ManifestTypeDefinition']
-    content: List[Tag]
-    extension_flags: PropertyExtensionFlags
+
+    extension_type: Optional[PropertyExtensionType]
+    extension_scope: Optional[ManifestExtensionScopeType]
+    extends: Union[None, int, 'ManifestDefinition']
 
     def __str__(self):
         name = "anonymous" if self.name is None else self.name
@@ -153,7 +155,7 @@ class ManifestProperty:
         self.parent = parent
         self.extends = None
         self.pii = False
-        self.extension_scope = ManifestExtensionScopeType.NONE
+        self.extension_scope = None
         self.integer_format = None
         self.string_format = None
         self.flags = PropertyFlags.NONE
@@ -195,11 +197,14 @@ class ManifestProperty:
             elif tag.index == ManifestPropertyTag.DISPLAY_NAME:
                 self.name = tag.value.decode('utf-8')
 
-            elif tag.index == ManifestPropertyTag.EXTENSION_EXTENDS:
+            elif tag.index == ManifestPropertyTag.EXTENSION_TAG:
                 self.extends = tag.value
 
-            elif tag.index == ManifestPropertyTag.EXTENSION_FLAGS:
-                self.extension_flags = PropertyExtensionFlags(tag.value)
+            elif tag.index == ManifestPropertyTag.EXTENSION_SCOPE:
+                self.extension_scope = ManifestExtensionScopeType(tag.value)
+
+            elif tag.index == ManifestPropertyTag.EXTENSION_OPERATION:
+                self.extension_type = PropertyExtensionType(tag.value)
 
             else:
                 raise ManifestError(f"Unhandled tag {tag.index} with value {tag.value}")
