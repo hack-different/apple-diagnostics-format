@@ -3,6 +3,8 @@ import struct
 from typing import *
 from enum import IntFlag
 from datetime import datetime, time
+from enum import *
+from dataclasses import *
 
 
 BYTE_PARSE_STRUCT = b'B'
@@ -29,8 +31,12 @@ class TagType(IntFlag):
     REPEATED = 0b100
 
 
-class Tag(NamedTuple):
-    index: int
+TEnum = TypeVar('T', int, IntEnum)
+
+
+@dataclass(kw_only=True)
+class Tag(Generic[TEnum]):
+    index: TEnum
     tag_type: TagType
     length: int
     value: any
@@ -76,7 +82,7 @@ encoded as in email 7bit encoding (MIME)
 """
 
 
-def decode_tag(data: Union[io.IOBase, bytes]) -> Optional[Tag]:
+def decode_tag(data: Union[io.IOBase, bytes], enum: Optional[Type] = int) -> Optional[Tag]:
     reader = io.BytesIO(data) if isinstance(data, bytes) else data
 
     result = decode_variable_length_int(reader)
@@ -88,23 +94,28 @@ def decode_tag(data: Union[io.IOBase, bytes]) -> Optional[Tag]:
     type_bits = TagType(encoded_tag & 0b111)
     index_bits = encoded_tag >> 3
 
+    if enum == int:
+        index = index_bits
+    else:
+        index = enum(index_bits)
+
     if type_bits & TagType.LENGTH_PREFIX:
         string_length, length_length = decode_variable_length_int(reader)
         value = reader.read(string_length)
-        return Tag(index=index_bits, tag_type=type_bits, length=length + length_length + string_length,
+        return Tag(index=index, tag_type=type_bits, length=length + length_length + string_length,
                    value=value)
 
     else:
         value, value_length = decode_variable_length_int(reader)
 
-        return Tag(index=index_bits, tag_type=type_bits, length=length + value_length, value=value)
+        return Tag(index=index, tag_type=type_bits, length=length + value_length, value=value)
 
 
-def decode_tags(data: Union[bytes, io.IOBase]) -> List[Tag]:
+def decode_tags(data: Union[bytes, io.IOBase], enum: Optional[Type] = int) -> List[Tag]:
     reader = io.BytesIO(data) if isinstance(data, bytes) else data
 
     result = []
-    while tag := decode_tag(reader):
+    while tag := decode_tag(reader, enum):
         result.append(tag)
 
     return result
