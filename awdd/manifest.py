@@ -5,7 +5,6 @@ from pathlib import Path
 from .definition import *
 
 from . import *
-from .object import *
 from .definition import *
 
 ROOT_MANIFEST_PATH = '/System/Library/PrivateFrameworks/WirelessDiagnostics.framework/Support/AWDMetadata.bin'
@@ -60,8 +59,8 @@ class ManifestTable(ManifestRegion):
         super().__init__(manifest, data, kind, offset, size)
         self.tag = tag
         self.checksum = checksum
-        self.objects = []
-        self.enums = []
+        self.objects: List[ManifestObjectDefinition] = []
+        self.enums: List[ManifestTypeDefinition] = []
 
     def __str__(self):
         return f"<ManifestTable tag:{hex(self.tag)} definitions:{len(self.rows)}>"

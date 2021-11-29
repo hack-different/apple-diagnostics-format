@@ -11,9 +11,11 @@ class LogParser:
 
     def __init__(self, metadata: Optional[Metadata] = None):
         self.metadata = metadata if metadata is not None else Metadata()
+        self.metadata.resolve()
 
     def parse(self, data: io.RawIOBase) -> DiagnosticObject:
-        root_object: ManifestObjectDefinition = self.metadata.root_object
-        result_object: DiagnosticObject = DiagnosticObject(self.metadata, ROOT_OBJECT)
+        root_object: ManifestObjectDefinition = self.metadata.root()
+        tags = decode_tags(data)
+        result_object: DiagnosticObject = DiagnosticObject(self.metadata, root_object, tags)
 
         return result_object

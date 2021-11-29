@@ -51,5 +51,5 @@ class Metadata:
         for tag in list(self.all_objects):
             self.all_objects[tag].extend()
 
-        print(self.all_enums)
-        print(self.all_objects)
+    def root(self) -> ManifestObjectDefinition:
+        return self.root_manifest.display_tables[0].objects[0]

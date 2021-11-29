@@ -67,3 +67,6 @@ def test_extension_parse_manifests():
 def test_resolve_metadata():
     metadata = Metadata()
     metadata.resolve()
+
+    for item in metadata.all_objects:
+        print(item)

@@ -403,6 +403,12 @@ class ManifestObjectDefinition(ManifestDefinition):
             else:
                 raise ManifestError(f"Unknown tag {hex(tag.index)} in object {self.name}")
 
+    def property_for_tag(self, tag: int) -> Optional[ManifestProperty]:
+        for prop in self.properties:
+            if prop.index == tag:
+                return prop
+        return None
+
     def bind(self, types: List['ManifestDefinition'], enums: Dict[int, 'ManifestTypeDefinition'], objects: Dict[int, 'ManifestObjectDefinition']):
         for prop in self.properties:
             prop.bind(types, enums, objects)
