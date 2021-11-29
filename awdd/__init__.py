@@ -23,6 +23,10 @@ def apple_time_to_datetime(epoch_milliseconds: int) -> datetime:
                     tzinfo=base_date_time.tzinfo)
 
 
+def to_complete_tag(category: int, index: int) -> int:
+    return (category << 16) | index
+
+
 class TagType(IntFlag):
     NONE = 0b000
     # Guess: Size Fixed known from format, encapsulated C struct
@@ -82,7 +86,7 @@ encoded as in email 7bit encoding (MIME)
 """
 
 
-def decode_tag(data: Union[io.IOBase, bytes], enum: Optional[Type] = int) -> Optional[Tag]:
+def decode_tag(data: Union[io.IOBase, bytes], enum: Optional[Type[IntEnum]] = int) -> Optional[Tag]:
     reader = io.BytesIO(data) if isinstance(data, bytes) else data
 
     result = decode_variable_length_int(reader)
@@ -111,7 +115,7 @@ def decode_tag(data: Union[io.IOBase, bytes], enum: Optional[Type] = int) -> Opt
         return Tag(index=index, tag_type=type_bits, length=length + value_length, value=value)
 
 
-def decode_tags(data: Union[bytes, io.IOBase], enum: Optional[Type] = int) -> List[Tag]:
+def decode_tags(data: Union[bytes, io.IOBase], enum: Optional[Type[IntEnum]] = int) -> List[Tag]:
     reader = io.BytesIO(data) if isinstance(data, bytes) else data
 
     result = []

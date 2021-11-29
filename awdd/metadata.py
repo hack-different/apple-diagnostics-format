@@ -21,12 +21,12 @@ class Metadata:
 
         self.all_definitions = {}
 
-        for definition in self.root_manifest.definitions():
-            self.all_definitions[definition.tag] = definition.display
+        for entry in self.root_manifest.definitions():
+            self.all_definitions[entry.tag] = entry.definition
 
         for extension in self.extension_manifests:
-            for definition in extension.definitions():
-                self.all_definitions[definition.tag] = definition.display
+            for entry in extension.definitions():
+                self.all_definitions[entry.tag] = entry.definition
 
         for tag in self.all_definitions:
             self.all_definitions[tag].bind(self.all_definitions)

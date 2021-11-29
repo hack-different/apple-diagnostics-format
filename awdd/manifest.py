@@ -16,8 +16,7 @@ ROOT_OBJECT_TAG = 0x00
 
 class CompositeDefinition(NamedTuple):
     tag: int
-    structure: ManifestDefinition
-    display: ManifestDefinition
+    definition: ManifestDefinition
 
 
 class ManifestRegionType(IntEnum):
@@ -64,9 +63,9 @@ class ManifestTable(ManifestRegion):
 
         for index, tag in enumerate(tags):
             if tag.index == ManifestTable.DEFINE_OBJECT_TAG:
-                self.rows.append(ManifestObjectDefinition.from_tag(index, tag))
+                self.rows.append(ManifestObjectDefinition.from_tag(self.tag, index, tag))
             elif tag.index == ManifestTable.DEFINE_ENUM_TAG:
-                self.rows.append(ManifestTypeDefinition.from_tag(index, tag))
+                self.rows.append(ManifestTypeDefinition.from_tag(self.tag, index, tag))
             else:
                 raise ManifestError(f"Unknown tag type at root {tag}")
 
@@ -150,12 +149,10 @@ class Manifest:
     def definitions(self) -> Generator[CompositeDefinition, None, None]:
         for tag in self.tags:
             tag_class = tag << 16
-            for entry in zip(self.structure_tables[tag].rows, self.display_tables[tag].rows):
-                yield CompositeDefinition(entry[0].index | tag_class, entry[0], entry[1])
+            for entry in self.display_tables[tag].rows:
+                yield CompositeDefinition(entry.index | tag_class, entry)
 
     def parse(self):
-        for index in self.structure_tables:
-            self.structure_tables[index].parse()
 
         for index in self.display_tables:
             self.display_tables[index].parse()
@@ -168,9 +165,9 @@ class Manifest:
             self.types = []
             for index, tag in enumerate(tags):
                 if tag.index == 1:
-                    self.types.append(ManifestObjectDefinition.from_tag(index, tag))
+                    self.types.append(ManifestObjectDefinition.from_tag(0, index, tag))
                 elif tag.index == 2:
-                    self.types.append(ManifestTypeDefinition.from_tag(index, tag))
+                    self.types.append(ManifestTypeDefinition.from_tag(0, index, tag))
 
         if self.extension_region:
             self._parse_extension_points()
