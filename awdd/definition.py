@@ -259,6 +259,15 @@ class ManifestProperty:
             else:
                 self.enum_type = enums[composite]
 
+    def extend(self):
+        if self.extends and isinstance(self.extends, ManifestObjectDefinition):
+            if self.extension_type == PropertyExtensionType.REPLACE_PROPERTY:
+                for existing_prop in list(self.extends.properties):
+                    if existing_prop.index == self.index:
+                        self.extends.properties.remove(existing_prop)
+
+            self.extends.properties.append(self)
+
 
 T = TypeVar('T', bound='ManifestDefinition')
 
@@ -397,3 +406,8 @@ class ManifestObjectDefinition(ManifestDefinition):
     def bind(self, types: List['ManifestDefinition'], enums: Dict[int, 'ManifestTypeDefinition'], objects: Dict[int, 'ManifestObjectDefinition']):
         for prop in self.properties:
             prop.bind(types, enums, objects)
+
+    def extend(self):
+        for prop in self.properties:
+            if prop.extends:
+                prop.extend()

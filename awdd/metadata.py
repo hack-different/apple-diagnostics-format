@@ -48,6 +48,8 @@ class Metadata:
         for tag in self.all_objects:
             self.all_objects[tag].bind(self.root_manifest.types, self.all_enums, self.all_objects)
 
+        for tag in self.all_objects:
+            self.all_objects[tag].extend()
 
         print(self.all_enums)
         print(self.all_objects)
