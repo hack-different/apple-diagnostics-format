@@ -6,6 +6,7 @@ from .definition import *
 
 from . import *
 from .object import *
+from .definition import *
 
 ROOT_MANIFEST_PATH = '/System/Library/PrivateFrameworks/WirelessDiagnostics.framework/Support/AWDMetadata.bin'
 EXTENSION_MANIFEST_PATH = '/System/Library/AWD/Metadata/*.bin'
@@ -20,6 +21,7 @@ class ExtensionPointTag(IntEnum):
 
 
 class CompositeDefinition(NamedTuple):
+    type: ManifestDefinitionTag
     tag: int
     definition: ManifestDefinition
 
@@ -58,19 +60,24 @@ class ManifestTable(ManifestRegion):
         super().__init__(manifest, data, kind, offset, size)
         self.tag = tag
         self.checksum = checksum
-        self.rows = []
+        self.objects = []
+        self.enums = []
 
     def __str__(self):
         return f"<ManifestTable tag:{hex(self.tag)} definitions:{len(self.rows)}>"
 
     def parse(self):
         tags = decode_tags(self.read_all())
+        object_index = 0
+        enum_index = 0
 
-        for index, tag in enumerate(tags):
+        for tag in tags:
             if tag.index == ManifestTable.DEFINE_OBJECT_TAG:
-                self.rows.append(ManifestObjectDefinition.from_tag(self.tag, index, tag))
+                self.objects.append(ManifestObjectDefinition.from_tag(self.tag, object_index, tag))
+                object_index += 1
             elif tag.index == ManifestTable.DEFINE_ENUM_TAG:
-                self.rows.append(ManifestTypeDefinition.from_tag(self.tag, index, tag))
+                self.enums.append(ManifestTypeDefinition.from_tag(self.tag, enum_index, tag))
+                enum_index += 1
             else:
                 raise ManifestError(f"Unknown tag type at root {tag}")
 
@@ -154,8 +161,10 @@ class Manifest:
     def definitions(self) -> Generator[CompositeDefinition, None, None]:
         for tag in self.tags:
             tag_class = tag << 16
-            for entry in self.display_tables[tag].rows:
-                yield CompositeDefinition(entry.index | tag_class, entry)
+            for entry in self.display_tables[tag].objects:
+                yield CompositeDefinition(ManifestDefinitionTag.DEFINE_OBJECT, entry.index | tag_class, entry)
+            for entry in self.display_tables[tag].enums:
+                yield CompositeDefinition(ManifestDefinitionTag.DEFINE_TYPE, entry.index | tag_class, entry)
 
     def parse(self):
 

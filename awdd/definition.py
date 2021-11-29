@@ -132,34 +132,45 @@ class ManifestProperty:
     extension_scope: Optional[ManifestExtensionScopeType]
     extends: Union[None, int, 'ManifestDefinition']
 
+    def __init__(self, parent):
+        self.content = []
+        self.parent = parent
+
+        self.type = PropertyType.UNKNOWN
+        self.flags = PropertyFlags.NONE
+        self.name = None
+        self.pii = False
+
+        self.integer_format = None
+        self.string_format = None
+
+        self.object_type = None
+        self.enum_type = None
+
+        self.extends = None
+        self.extension_scope = None
+        self.extension_flags = None
+
     def __str__(self):
         name = "anonymous" if self.name is None else self.name
 
         if self.type == PropertyType.OBJECT:
-            object_target = f"class:{to_type_descriptor(self.object_type)} "
+            object_target = f" class:{to_type_descriptor(self.object_type)}"
         else:
             object_target = ""
 
         if self.extends:
-            object_extends = f"extends:{to_type_descriptor(self.extends)} "
+            object_extends = f" extends:{to_type_descriptor(self.extends)}"
         else:
             object_extends = ""
 
-        return f"<PropertyDefinition {name} type:{repr(self.type)} tag:{hex(self.index)} flags:{repr(self.flags)} " \
-               f"{object_target}{object_extends}>"
+        if self.enum_type:
+            enum_desc = f" enum:{to_type_descriptor(self.enum_type)}"
+        else:
+            enum_desc = ""
 
-    def __init__(self, parent):
-        self.type = PropertyType.UNKNOWN
-        self.name = None
-        self.type_name = None
-        self.parent = parent
-        self.extends = None
-        self.pii = False
-        self.extension_scope = None
-        self.integer_format = None
-        self.string_format = None
-        self.flags = PropertyFlags.NONE
-        self.extension_flags = None
+        return f"<PropertyDefinition {name} type:{repr(self.type)} tag:{hex(self.index)} flags:{repr(self.flags)} " \
+               f"{object_target}{object_extends}{enum_desc}>"
 
     def parse(self, content: bytes):
         self.content = decode_tags(content, ManifestPropertyTag)
@@ -175,7 +186,7 @@ class ManifestProperty:
                 self.index = tag.value
 
             elif tag.index == ManifestPropertyTag.ENUM_TYPE:
-                self.enum = tag.value
+                self.enum_type = tag.value
 
             elif tag.index == ManifestPropertyTag.PII:
                 if tag.value == 0:
@@ -202,6 +213,8 @@ class ManifestProperty:
 
             elif tag.index == ManifestPropertyTag.EXTENSION_SCOPE:
                 self.extension_scope = ManifestExtensionScopeType(tag.value)
+                if not self.extends:
+                    self.extends = 0x01
 
             elif tag.index == ManifestPropertyTag.EXTENSION_OPERATION:
                 self.extension_type = PropertyExtensionType(tag.value)
@@ -218,18 +231,33 @@ class ManifestProperty:
                 f"Unable to set type for property {self.name if self.name is not None else 'anonymous'} for class "
                 "{self.parent.name} to type {hex(self.type)}")
 
-    def bind(self, defs: Dict[int, 'ManifestDefinition']):
-        if self.extends and isinstance(self.extends, int):
-            if self.extends not in defs:
+    def bind(self, types: List['ManifestDefinition'], enums: Dict[int, 'ManifestTypeDefinition'], objects: Dict[int, 'ManifestObjectDefinition']):
+        if self.extends:
+            extend_id = self.extends
+            if self.extension_scope == ManifestExtensionScopeType.LOCAL_SCOPE:
+                extend_id = to_complete_tag(self.parent.category, self.extends)
+
+            if self.extension_scope == ManifestExtensionScopeType.CONFIGURATION_SCOPE:
+                self.extends = types[extend_id]
+                return
+
+            if self.extends not in objects:
                 print(f"Invalid Tag?")
             else:
-                self.extends = defs[self.extends]
+                self.extends = objects[extend_id]
 
         if self.type == PropertyType.OBJECT and isinstance(self.object_type, int):
-            if self.object_type not in defs:
+            if self.object_type not in objects:
                 print(f"Invalid Tag?")
             else:
-                self.object_type = defs[self.object_type]
+                self.object_type = objects[self.object_type]
+
+        elif self.type == PropertyType.ENUM:
+            composite = to_complete_tag(self.parent.category, self.enum_type)
+            if composite not in enums:
+                print("Invalid enum")
+            else:
+                self.enum_type = enums[composite]
 
 
 T = TypeVar('T', bound='ManifestDefinition')
@@ -241,6 +269,7 @@ class ManifestDefinition(ABC):
     content: List[Tag]
     category: int
     index: int
+    tag: int
     name: Optional[str]
 
     def __init__(self, category: int, index: int):
@@ -267,7 +296,7 @@ class ManifestDefinition(ABC):
         result.parse(data)
         return result
 
-    def bind(self, defs: Dict[int, 'ManifestDefinition']):
+    def bind(self, roots: List['ManifestDefinition'], enums: Dict[int, 'ManifestTypeDefinition'], objects: Dict[int, 'ManifestObjectDefinition']):
         pass
 
 
@@ -365,6 +394,6 @@ class ManifestObjectDefinition(ManifestDefinition):
             else:
                 raise ManifestError(f"Unknown tag {hex(tag.index)} in object {self.name}")
 
-    def bind(self, defs: Dict[int, 'ManifestDefinition']):
+    def bind(self, types: List['ManifestDefinition'], enums: Dict[int, 'ManifestTypeDefinition'], objects: Dict[int, 'ManifestObjectDefinition']):
         for prop in self.properties:
-            prop.bind(defs)
+            prop.bind(types, enums, objects)
