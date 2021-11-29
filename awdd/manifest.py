@@ -14,6 +14,11 @@ EXTENSION_MANIFEST_PATH = '/System/Library/AWD/Metadata/*.bin'
 ROOT_OBJECT_TAG = 0x00
 
 
+class ExtensionPointTag(IntEnum):
+    DISPLAY_NAME = 0x01
+    TAG = 0x02
+
+
 class CompositeDefinition(NamedTuple):
     tag: int
     definition: ManifestDefinition
@@ -221,18 +226,15 @@ class Manifest:
 
         self.extensions = {}
 
-        extension_data = self.extension_region.read_all()
-        extension_stream = io.BytesIO(extension_data)
-        while extension_point := decode_tag(extension_stream):
-            assert(extension_point.index == 1)  # Only known type in this region is EXTEND_POINT
-            extend_stream = io.BytesIO(extension_point.value)
+        for tag in decode_tags(self.extension_region.read_all()):
+            assert(tag.index == 1)
+            name = None
 
-            name = ''
-            while extend_value := decode_tag(extend_stream):
-                if extend_value.index == 1:  # Name value
-                    name = extend_value.value
-                elif extend_value.index == 2:
-                    self.extensions[extend_value.value] = name
+            for element in decode_tags(tag.value, ExtensionPointTag):
+                if element.index == ExtensionPointTag.DISPLAY_NAME:  # Name value
+                    name = element.value.decode('utf-8')
+                elif element.index == ExtensionPointTag.TAG:
+                    self.extensions[element.value] = name
 
     @property
     def tags(self):
