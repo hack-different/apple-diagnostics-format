@@ -2,95 +2,97 @@ syntax = "proto3";
 
 package awdd.metadata;
 
-enum IntegerFormat {
-  UNKNOWN_INTEGER = 0x00;
-  TIMESTAMP = 0x01;
-  METRIC_ID = 0x02;
-  TRIGGER_ID = 0x03;
-  PROFILE_ID = 0x04;
-  COMPONENT_ID = 0x05;
-  AVERAGE_TIME = 0x15;
-  TIME_DELTA = 0x16;
-  TIMEZONE_OFFSET = 0x17;
-  ASSOCIATED_TIME = 0x18;
-  PERIOD_IN_HOURS = 0x19;
-  TIME_OF_DAY = 0x1E;
-  SAMPLE_TIMESTAMP = 0x1F;
-}
-
-enum PropertyType {
-  UNKNOWN_TYPE = 0x00;
-  DOUBLE = 0x01;
-  FLOAT = 0x02;
-  INTEGER_64 = 0x03;
-  INTEGER = 0x04;
-  ERROR_CODE = 0x05;
-  INTEGER_32 = 0x06;
-  INTEGER_UNSIGNED = 0x07;
-  BYTE_COUNT = 0x08;
-  SEQUENCE_NUMBER = 0x09;
-  BEDF_OPERATOR = 0x0A;
-  BOOLEAN = 0x0C;
-  ENUM = 0x0B;
-  STRING = 0x0D;
-  BYTES = 0x0E;
-  PACKED_UINT_32 = 0x15;
-  PACKED_TIMES = 0x11;
-  PACKED_ERRORS = 0x14;
-  OBJECT = 0x1B;
-}
-
-enum StringFormat {
-  UNKNOWN_STRING = 0x00;
-  UUID = 0x01;
-}
-
 message DefineObject {
+  message Field {
+    enum Kind {
+      UNKNOWN = 0;
+      DOUBLE = 1;
+      FLOAT = 2;
+      INT64 = 3;
+      UINT64 = 4;
+      ERROR_CODE = 5;
+      INT32 = 6;
+      UINT32 = 7;
+      BYTE_COUNT = 8;
+      SEQUENCE_NUMBER = 9;
+      BEDF_OPERATOR = 10;
+      ENUM = 11;
+      BOOLEAN = 12;
+      STRING = 13;
+      BYTES = 14;
+      PACKED_TIMES = 0x11;
+      PACKED_ERRORS = 0x14;
+      PACKED_UINT_32 = 0x15;
+      OBJECT = 27;
+    }
+
+    enum IntegerKind {
+      UNKNOWN_INTEGER = 0x00;
+      TIMESTAMP = 0x01;
+      METRIC_ID = 0x02;
+      TRIGGER_ID = 0x03;
+      PROFILE_ID = 0x04;
+      COMPONENT_ID = 0x05;
+      AVERAGE_TIME = 0x15;
+      TIME_DELTA_MS = 0x16;
+      TIMEZONE_OFFSET = 0x17;
+      ASSOCIATED_TIME = 0x18;
+      PERIOD_IN_HOURS = 0x19;
+      TIME_OF_DAY = 0x1E;
+      SAMPLE_TIMESTAMP = 0x1F;
+    }
+
+    enum MetricType {
+      METRIC_UNKNOWN = 0;
+      METRIC_EVENT = 1;
+      METRIC_STATS = 2;
+      METRIC_STATE = 3;
+    }
+
+    uint64 tag = 1;
+    Kind type = 2;
+    bool is_repeated = 3;
+    optional string name = 4;
+    optional bool has_pii = 5;
+    optional bool has_loc = 6;
+    optional uint64 message_type_index = 7;
+    optional uint64 enum_type_index = 8;
+    optional IntegerKind number_pretty_format = 9;
+
+    optional MetricType metric_type = 12;
+  }
+
   optional string name = 1;
-  repeated DefineProperty defineProperty = 2;
+  repeated Field fields = 2;
 }
 
-message DefineProperty {
-  uint64 tag = 1;
-  PropertyType type = 2;
-  uint32 flags = 3;
-  optional string name = 4;
-  optional bool pii = 5;
-  optional StringFormat string_format = 6;
-  optional uint64 object_tag = 7;
-  optional uint64 enum_tag = 0x08;
-  optional IntegerFormat integer_format = 9;
-  optional uint32 extend_operation = 0x0A;
-  optional uint64 extend_tag = 0x0B;
-}
+message Enum {
+  message EnumValue {
+    optional string label = 1;
+    optional uint32 intValue = 2;
+    optional uint64 longValue = 3;
+  }
 
-message DefineEnumValue {
   optional string name = 1;
-  optional uint64 value = 2;
-  optional sint64 signedValue = 3;
-}
-
-message DefineEnum {
-  string name = 1;
-  repeated DefineEnumValue defineValue = 2;
+  repeated EnumValue members = 2;
 }
 
 message Metadata {
-  repeated DefineObject defineObject = 1;
-  repeated DefineEnum defineEnum = 2;
-}
-
-message Extension {
-  string name = 1;
-  int64 tag = 2;
+  repeated DefineObject messages = 1;
+  repeated Enum enums = 2;
 }
 
 message Extensions {
+  message Extension {
+    string name = 1;
+    int64 tag = 2;
+  }
+
   repeated Extension extensions = 1;
 }
 
 message ManifestIdentity {
-  string hash = 1;
-  string name = 2;
-  uint64 timestamp = 3;
+  string git_hash = 1;
+  string git_description = 2;
+  uint64 build_time = 3;
 }
