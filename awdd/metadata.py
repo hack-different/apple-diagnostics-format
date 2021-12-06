@@ -31,7 +31,7 @@ class Metadata:
             elif entry.type == ManifestDefinitionTag.DEFINE_OBJECT:
                 self.all_objects[entry.tag] = entry.definition
             else:
-                raise ManifestError(f"Unknown defintion type")
+                raise ManifestError(f"Unknown deinition type")
 
         for extension in self.extension_manifests:
             for entry in extension.definitions():
