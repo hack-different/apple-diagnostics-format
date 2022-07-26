@@ -12,10 +12,10 @@ repository="https://github.com/rickmark/awdd_decode"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-protobuf = "^3.19.1"
+protobuf = "^4.21"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6"
+pytest = "^7"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
