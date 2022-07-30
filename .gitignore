@@ -133,3 +133,5 @@ metadata/
 .DS_Store
 
 tests/fixtures/*
+
+dist/

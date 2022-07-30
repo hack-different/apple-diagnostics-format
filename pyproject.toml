@@ -2,13 +2,14 @@
 requires=["setuptools", "wheel", "poetry"]
 
 [tool.poetry]
-name="awdd_decode"
+name="awdd"
 authors=["Rick Mark <rickmark@outlook.com>"]
 version="0.9.1"
 description="Utility to parse Apple Wireless Diagnostics reports"
 license="MIT"
 readme="README.md"
-repository="https://github.com/rickmark/awdd_decode"
+homepage="https://github.com/hack-different/apple-diagnostics-format"
+repository="https://github.com/hack-different/apple-diagnostics-format.git"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -16,6 +17,10 @@ protobuf = "^4.21"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7"
+pre-commit = "^2.20.0"
+pylint = "^2.14.5"
+black = "^22.6.0"
+mypy = "^0.971"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

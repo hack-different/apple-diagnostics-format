@@ -8,7 +8,7 @@ class TextWriter:
         pass
 
     def _write_to_internal(self, value: DiagnosticObject):
-        indent_space = indent * '\t'
+        indent_space = indent * "\t"
         for prop in value.properties:
             if prop.property.type != PropertyType.OBJECT:
                 stream.write(f"{indent_space}{prop.property.name}: {prop.value}\n")

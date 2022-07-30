@@ -7,7 +7,7 @@ from enum import *
 from dataclasses import *
 
 
-BYTE_PARSE_STRUCT = b'B'
+BYTE_PARSE_STRUCT = b"B"
 
 
 class ManifestError(Exception):
@@ -18,9 +18,16 @@ def apple_time_to_datetime(epoch_milliseconds: int) -> datetime:
     unix_epoch = epoch_milliseconds / 1000
     micros = (epoch_milliseconds % 1000) * 1000
     base_date_time = datetime.utcfromtimestamp(unix_epoch)
-    return datetime(base_date_time.year, base_date_time.month, base_date_time.day, hour=base_date_time.hour,
-                    minute=base_date_time.minute, second=base_date_time.second, microsecond=micros,
-                    tzinfo=base_date_time.tzinfo)
+    return datetime(
+        base_date_time.year,
+        base_date_time.month,
+        base_date_time.day,
+        hour=base_date_time.hour,
+        minute=base_date_time.minute,
+        second=base_date_time.second,
+        microsecond=micros,
+        tzinfo=base_date_time.tzinfo,
+    )
 
 
 def to_complete_tag(category: int, index: int) -> int:
@@ -35,7 +42,7 @@ class TagType(IntFlag):
     REPEATED = 0b100
 
 
-TEnum = TypeVar('T', int, IntEnum)
+TEnum = TypeVar("T", int, IntEnum)
 
 
 @dataclass(kw_only=True)
@@ -51,7 +58,9 @@ class VariableLengthInteger(NamedTuple):
     size: int
 
 
-def decode_variable_length_int(reader: Union[BinaryIO, io.BytesIO]) -> Optional[VariableLengthInteger]:
+def decode_variable_length_int(
+    reader: Union[BinaryIO, io.BytesIO]
+) -> Optional[VariableLengthInteger]:
     def read_bytes() -> Generator[int, None, None]:
         data = reader.read(struct.calcsize(BYTE_PARSE_STRUCT))
         if data is None or len(data) == 0:
@@ -61,7 +70,9 @@ def decode_variable_length_int(reader: Union[BinaryIO, io.BytesIO]) -> Optional[
 
         while byte & 0b1000_0000 != 0:
             yield byte & 0b0111_1111
-            byte, *_ = struct.unpack(BYTE_PARSE_STRUCT, reader.read(struct.calcsize(BYTE_PARSE_STRUCT)))
+            byte, *_ = struct.unpack(
+                BYTE_PARSE_STRUCT, reader.read(struct.calcsize(BYTE_PARSE_STRUCT))
+            )
 
         yield byte
 
@@ -82,11 +93,13 @@ def decode_variable_length_int(reader: Union[BinaryIO, io.BytesIO]) -> Optional[
 Reads in a single tag and it's associated data.  If the low order bits indicate that there is a length
 prefix (as is in the case of strings and constructed object types).  For scalar primitives, the high order
 bit of the value indicates if there are more bytes to be read.  Finally the remaining 7 bits are 7 to 8 bit
-encoded as in email 7bit encoding (MIME)  
+encoded as in email 7bit encoding (MIME)
 """
 
 
-def decode_tag(data: Union[io.IOBase, bytes], enum: Optional[Type[IntEnum]] = int) -> Optional[Tag]:
+def decode_tag(
+    data: Union[io.IOBase, bytes], enum: Optional[Type[IntEnum]] = int
+) -> Optional[Tag]:
     reader = io.BytesIO(data) if isinstance(data, bytes) else data
 
     result = decode_variable_length_int(reader)
@@ -106,16 +119,24 @@ def decode_tag(data: Union[io.IOBase, bytes], enum: Optional[Type[IntEnum]] = in
     if type_bits & TagType.LENGTH_PREFIX:
         string_length, length_length = decode_variable_length_int(reader)
         value = reader.read(string_length)
-        return Tag(index=index, tag_type=type_bits, length=length + length_length + string_length,
-                   value=value)
+        return Tag(
+            index=index,
+            tag_type=type_bits,
+            length=length + length_length + string_length,
+            value=value,
+        )
 
     else:
         value, value_length = decode_variable_length_int(reader)
 
-        return Tag(index=index, tag_type=type_bits, length=length + value_length, value=value)
+        return Tag(
+            index=index, tag_type=type_bits, length=length + value_length, value=value
+        )
 
 
-def decode_tags(data: Union[bytes, io.IOBase], enum: Optional[Type[IntEnum]] = int) -> List[Tag]:
+def decode_tags(
+    data: Union[bytes, io.IOBase], enum: Optional[Type[IntEnum]] = int
+) -> List[Tag]:
     reader = io.BytesIO(data) if isinstance(data, bytes) else data
 
     result = []
@@ -123,4 +144,3 @@ def decode_tags(data: Union[bytes, io.IOBase], enum: Optional[Type[IntEnum]] = i
         result.append(tag)
 
     return result
-

@@ -16,6 +16,8 @@ class LogParser:
     def parse(self, data: io.RawIOBase) -> DiagnosticObject:
         root_object: ManifestObjectDefinition = self.metadata.root()
         tags = decode_tags(data)
-        result_object: DiagnosticObject = DiagnosticObject(self.metadata, root_object, tags)
+        result_object: DiagnosticObject = DiagnosticObject(
+            self.metadata, root_object, tags
+        )
 
         return result_object

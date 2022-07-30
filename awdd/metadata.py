@@ -14,7 +14,9 @@ class Metadata:
     def __init__(self):
         self.root_manifest = Manifest(ROOT_MANIFEST_PATH)
 
-        self.extension_manifests = [Manifest(path) for path in glob(EXTENSION_MANIFEST_PATH)]
+        self.extension_manifests = [
+            Manifest(path) for path in glob(EXTENSION_MANIFEST_PATH)
+        ]
 
         self.all_enums = {}
         self.all_objects = {}
@@ -43,10 +45,14 @@ class Metadata:
                     raise ManifestError(f"Unknown defintion type")
 
         for tag in self.all_enums:
-            self.all_enums[tag].bind(self.root_manifest.types, self.all_enums, self.all_objects)
+            self.all_enums[tag].bind(
+                self.root_manifest.types, self.all_enums, self.all_objects
+            )
 
         for tag in self.all_objects:
-            self.all_objects[tag].bind(self.root_manifest.types, self.all_enums, self.all_objects)
+            self.all_objects[tag].bind(
+                self.root_manifest.types, self.all_enums, self.all_objects
+            )
 
         for tag in list(self.all_objects):
             self.all_objects[tag].extend()

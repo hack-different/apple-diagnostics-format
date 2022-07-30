@@ -100,7 +100,7 @@ class ManifestEnumMemberTag(IntEnum):
     VALUE_SIGNED = 0x03
 
 
-def to_type_descriptor(target: Union[None, int, 'ManifestDefinition']) -> Optional[str]:
+def to_type_descriptor(target: Union[None, int, "ManifestDefinition"]) -> Optional[str]:
     if target:
         if isinstance(target, int):
             return hex(target)
@@ -123,14 +123,14 @@ class ManifestProperty:
     integer_format: Optional[IntegerFormat]
     string_format: Optional[StringFormat]
 
-    object_type: Union[None, int, 'ManifestObjectDefinition']
-    enum_type: Union[None, int, 'ManifestTypeDefinition']
+    object_type: Union[None, int, "ManifestObjectDefinition"]
+    enum_type: Union[None, int, "ManifestTypeDefinition"]
 
-    target: Union[None, int, 'ManifestDefinition']
+    target: Union[None, int, "ManifestDefinition"]
 
     extension_type: Optional[PropertyExtensionType]
     extension_scope: Optional[ManifestExtensionScopeType]
-    extends: Union[None, int, 'ManifestDefinition']
+    extends: Union[None, int, "ManifestDefinition"]
 
     def __init__(self, parent):
         self.content = []
@@ -169,8 +169,10 @@ class ManifestProperty:
         else:
             enum_desc = ""
 
-        return f"<PropertyDefinition {name} type:{repr(self.type)} tag:{hex(self.index)} flags:{repr(self.flags)} " \
-               f"{object_target}{object_extends}{enum_desc}>"
+        return (
+            f"<PropertyDefinition {name} type:{repr(self.type)} tag:{hex(self.index)} flags:{repr(self.flags)} "
+            f"{object_target}{object_extends}{enum_desc}>"
+        )
 
     def parse(self, content: bytes):
         self.content = decode_tags(content, ManifestPropertyTag)
@@ -206,7 +208,7 @@ class ManifestProperty:
                 self.string_format = StringFormat(tag.value)
 
             elif tag.index == ManifestPropertyTag.DISPLAY_NAME:
-                self.name = tag.value.decode('utf-8')
+                self.name = tag.value.decode("utf-8")
 
             elif tag.index == ManifestPropertyTag.EXTENSION_TAG:
                 self.extends = tag.value
@@ -229,9 +231,15 @@ class ManifestProperty:
         except ValueError:
             raise ManifestError(
                 f"Unable to set type for property {self.name if self.name is not None else 'anonymous'} for class "
-                "{self.parent.name} to type {hex(self.type)}")
+                "{self.parent.name} to type {hex(self.type)}"
+            )
 
-    def bind(self, types: List['ManifestDefinition'], enums: Dict[int, 'ManifestTypeDefinition'], objects: Dict[int, 'ManifestObjectDefinition']):
+    def bind(
+        self,
+        types: List["ManifestDefinition"],
+        enums: Dict[int, "ManifestTypeDefinition"],
+        objects: Dict[int, "ManifestObjectDefinition"],
+    ):
         if self.extends:
             extend_id = self.extends
             if self.extension_scope == ManifestExtensionScopeType.LOCAL_SCOPE:
@@ -269,7 +277,7 @@ class ManifestProperty:
             self.extends.properties.append(self)
 
 
-T = TypeVar('T', bound='ManifestDefinition')
+T = TypeVar("T", bound="ManifestDefinition")
 
 
 class ManifestDefinition(ABC):
@@ -284,7 +292,7 @@ class ManifestDefinition(ABC):
     def __init__(self, category: int, index: int):
         self.category = category
         self.index = index
-        self.name = '__anonymous__'
+        self.name = "__anonymous__"
 
     def composite_tag(self) -> int:
         return to_complete_tag(self.category, self.index)
@@ -296,7 +304,9 @@ class ManifestDefinition(ABC):
     @classmethod
     def from_tag(cls: Type[T], category: int, index: int, tag: Tag) -> T:
         if tag.index != cls.TAG:
-            raise ManifestError(f"Attempted to parse the wrong definition, value {tag.index} is not of type {cls.TAG}")
+            raise ManifestError(
+                f"Attempted to parse the wrong definition, value {tag.index} is not of type {cls.TAG}"
+            )
         return cls.from_bytes(category, index, tag.value)
 
     @classmethod
@@ -305,7 +315,12 @@ class ManifestDefinition(ABC):
         result.parse(data)
         return result
 
-    def bind(self, roots: List['ManifestDefinition'], enums: Dict[int, 'ManifestTypeDefinition'], objects: Dict[int, 'ManifestObjectDefinition']):
+    def bind(
+        self,
+        roots: List["ManifestDefinition"],
+        enums: Dict[int, "ManifestTypeDefinition"],
+        objects: Dict[int, "ManifestObjectDefinition"],
+    ):
         pass
 
 
@@ -322,7 +337,7 @@ class ManifestEnumMember:
         while tag := decode_tag(reader, ManifestEnumMemberTag):
             if tag.index == ManifestEnumMemberTag.DISPLAY_NAME:
                 if tag.value is str:
-                    self.name = tag.value.decode('utf-8')
+                    self.name = tag.value.decode("utf-8")
                 else:
                     self.name = tag.value
 
@@ -337,7 +352,9 @@ class ManifestEnumMember:
                 self.value = tag.value
 
             else:
-                raise ManifestError(f"Unknown tag type in EnumMember definition {hex(tag.index)} = {tag.value}")
+                raise ManifestError(
+                    f"Unknown tag type in EnumMember definition {hex(tag.index)} = {tag.value}"
+                )
 
     def __str__(self):
         return f"<ManifestEnumMember {self.name} = {hex(self.value)}>"
@@ -347,7 +364,7 @@ class ManifestTypeDefinition(ManifestDefinition):
     TAG = 2
 
     entries: List[ManifestEnumMember]
-    extend: Union[None, int, 'ManifestDefinition']
+    extend: Union[None, int, "ManifestDefinition"]
 
     def __init__(self, category, index):
         super().__init__(category, index)
@@ -362,13 +379,15 @@ class ManifestTypeDefinition(ManifestDefinition):
 
         for index, tag in enumerate(self.content):
             if tag.index == ManifestTypeDefinitionTag.DISPLAY_NAME:
-                self.name = tag.value.decode('utf-8')
+                self.name = tag.value.decode("utf-8")
 
             elif tag.index == ManifestTypeDefinitionTag.ENUM_MEMBER:
                 self.entries.append(ManifestEnumMember(index, tag.value))
 
             else:
-                raise ManifestError(f"Unknown property in type {self.name} - {tag.index} ({tag.value})")
+                raise ManifestError(
+                    f"Unknown property in type {self.name} - {tag.index} ({tag.value})"
+                )
 
 
 class ManifestObjectDefinition(ManifestDefinition):
@@ -386,7 +405,9 @@ class ManifestObjectDefinition(ManifestDefinition):
         if self.name is not None:
             return f"<ManifestObject name:{self.name} property_count:{len(self.properties)}>"
         else:
-            return f"<ManifestObject __anonymous__ property_count:{len(self.properties)}>"
+            return (
+                f"<ManifestObject __anonymous__ property_count:{len(self.properties)}>"
+            )
 
     def parse(self, content: bytes):
         self.content = decode_tags(content, ManifestObjectDefinitionTag)
@@ -398,10 +419,12 @@ class ManifestObjectDefinition(ManifestDefinition):
                 self.properties.append(prop)
 
             elif tag.index == ManifestObjectDefinitionTag.DISPLAY_NAME:
-                self.name = tag.value.decode('utf-8')
+                self.name = tag.value.decode("utf-8")
 
             else:
-                raise ManifestError(f"Unknown tag {hex(tag.index)} in object {self.name}")
+                raise ManifestError(
+                    f"Unknown tag {hex(tag.index)} in object {self.name}"
+                )
 
     def property_for_tag(self, tag: int) -> Optional[ManifestProperty]:
         for prop in self.properties:
@@ -409,7 +432,12 @@ class ManifestObjectDefinition(ManifestDefinition):
                 return prop
         return None
 
-    def bind(self, types: List['ManifestDefinition'], enums: Dict[int, 'ManifestTypeDefinition'], objects: Dict[int, 'ManifestObjectDefinition']):
+    def bind(
+        self,
+        types: List["ManifestDefinition"],
+        enums: Dict[int, "ManifestTypeDefinition"],
+        objects: Dict[int, "ManifestObjectDefinition"],
+    ):
         for prop in self.properties:
             prop.bind(types, enums, objects)
 

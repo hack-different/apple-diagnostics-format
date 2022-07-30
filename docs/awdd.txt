@@ -77,7 +77,7 @@ metriclogs { (tag 0x7A - total 48dec - offset 269 bytes - subsequence length 46d
     registration_status: 0 (tag 0x48 - variable length int - value 0)
     subs_id: 0 (tag 0x50 - variable length int - value 0)
   }
-  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes) 
+  commCenterOperatorRoaming { (tag 0xFA878002 - subsequence length of 0x0B - 11dec bytes)
     timestamp: 1632683239874 (tag 0x08 - length 06)
     registration_status: 0 (tag 0x48 - variable length int - value 0)
     subs_id: 0 (tag 0x50 - variable length int - value 0)
@@ -89,7 +89,7 @@ metriclogs { (tag 0x7A - total 604dec - offset 317dec - encoded length = 0xD904 
   profileId: 434 (tag 0x30 - data 0xB203)
   profileId: 435 (tag 0x30 - data 0xB303)
   profileId: 437 (tag 0x30 - data 0xB503)
-  nfcGeneralStatistic { (tag 0xB280A009 - length 0x6F - 
+  nfcGeneralStatistic { (tag 0xB280A009 - length 0x6F -
     timestamp: 1632614400000 (tag 0x08 - length 0x06
     startTimestamp: 1632590364612 (tag 0x10 - length 0x06)_
     totalCEEnable: 0 (tag 0x018
@@ -289,8 +289,8 @@ metriclogs { (tag 0x7A - total 145dec bytes - offset 921dec
     direction: HomeKitMessageDirection_Receive (tag 0x40 - value 0x01
     messageName: "kHomeConfigInternalRequestKey" (tag 0x4A - string length 0x1d 29dec)
   }
-} 
-metriclogs { (tag 0x7A - offset 1066dec 
+}
+metriclogs { (tag 0x7A - offset 1066dec
   triggerTime: 1632614400000
   triggerId: 2359308
   profileId: 246
@@ -397,7 +397,7 @@ metriclogs { (tag 0x7A - total 111dec bytes - offset 1625dec)
 }
 metriclogs { (tag 0x7A - total 74dec bytes - offset 1736dec)
   triggerTime: 1632690000000 (tag 0x20 - variable length int - data 6 bytes)
-  triggerId: 2588688 (tag 0x28 - 
+  triggerId: 2588688 (tag 0x28 -
   profileId: 287 (tag 0x30 - variable length int - 0x9F02)
   idsServerStorageStateMachineCompleted {
     timestamp: 1632690000000 (tag 0x08 - length 0x06 bytes)
@@ -412,7 +412,7 @@ metriclogs { (tag 0x7A - offset 1810dec)
   triggerTime: 1632704400000 (tag 0x20 - data 6dec bytes
   triggerId: 2588688 (tag 0x28 - variable length int - 4dec bytes data)
   profileId: 287 (tag 0x30 - 2bytes data)
-  idsServerStorageStateMachineCompleted { (tag 0x8281F009 - length 0x36 - 54dec bytes) 
+  idsServerStorageStateMachineCompleted { (tag 0x8281F009 - length 0x36 - 54dec bytes)
     timestamp: 1632704400000 (tag 0x08 - data length 06dec)
     wasPrimary: true (tag 0x10 - data 0x01 true)
     serviceIdentifier: "com.apple.private.alloy.bulletinboard" (tag 0x1A - string length 37dec)

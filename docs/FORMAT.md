@@ -4,8 +4,8 @@
 ## Tags
 
 Tags are multi-byte integers with the lowest 3 bits being the primal type, while the remaining
-bits get shifted right (`>> 3`) to become the "index" from the definition.  This makes the 
-"timestamp" value in a log (tag `0x08`) actually type `0x00` and index `0x01` matching up with 
+bits get shifted right (`>> 3`) to become the "index" from the definition.  This makes the
+"timestamp" value in a log (tag `0x08`) actually type `0x00` and index `0x01` matching up with
 definition from the ambiant root file.  Having a lowest order bit of 0x00 means that the value is
 to be interpreted as a multi-byte integer.
 
@@ -150,7 +150,7 @@ class IntegerFormat(IntEnum):
     PERIOD_IN_HOURS = 0x19
     TIME_OF_DAY = 0x1E
     SAMPLE_TIMESTAMP = 0x1F
-    
+
 class StringFormat(IntEnum):
     UNKNOWN = 0x00
     UUID = 0x01
@@ -214,7 +214,7 @@ schema. It will contain object definitions, with property definitions as well as
 definitions.
 
 This table contains class and object definitions designed to "enrich" the definitions from
-the `0x02000400` table with additional data for translation into text format.  
+the `0x02000400` table with additional data for translation into text format.
 
 ## Non-tag specific
 
@@ -248,4 +248,3 @@ assocated constituant extension manifests
 
 
 # Log Files
-

@@ -14,8 +14,8 @@ ROOT_OBJECT = None
 
 @dataclass
 class DiagnosticValue:
-    property: 'ManifestDefinition'
-    value: Union[Any, 'DiagnosticObject']
+    property: "ManifestDefinition"
+    value: Union[Any, "DiagnosticObject"]
 
     def __init__(self, metadata: Metadata, prop: ManifestProperty, tag: Tag):
         self.property = prop
@@ -28,17 +28,18 @@ class DiagnosticValue:
 @dataclass
 class DiagnosticObject:
     metadata: Metadata
-    object_class: 'ManifestObjectDefinition'
+    object_class: "ManifestObjectDefinition"
     properties: List[DiagnosticValue]
 
-    def __init__(self, metadata: Metadata, klass: 'ManifestObjectDefinition', values: List[Tag]):
+    def __init__(
+        self, metadata: Metadata, klass: "ManifestObjectDefinition", values: List[Tag]
+    ):
         self.metadata = metadata
         self.object_class = klass
         self.properties = []
         for tag in values:
             prop = self.object_class.property_for_tag(tag.index)
             self.properties.append(DiagnosticValue(metadata, prop, tag.value))
-
 
 
 class WriterBase(ABC):
@@ -50,4 +51,3 @@ class WriterBase(ABC):
     @abstractmethod
     def write_to(self, value: DiagnosticObject, stream: io.IOBase) -> None:
         pass
-
