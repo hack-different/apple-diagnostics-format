@@ -28,3 +28,10 @@ addopts = "-ra -q"
 testpaths = [
     "tests"
 ]
+
+[mypy]
+python_version = 3.7
+
+[pytest]
+cache_dir = ".pytest_cache"
+testpaths = "tests"
